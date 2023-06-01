@@ -1,0 +1,19 @@
+name: Build
+
+on: pull_request
+
+jobs:
+  build_job:
+    runs-on: ubuntu-latest
+    name: Build wfa_qt_app
+    steps:
+    - name: Checkout the code
+      uses: actions/checkout@v3
+      with:
+        path: wfa_qt_app
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+    - name: Linux build
+      run: |
+        cd wfa_qt_app
+        make
