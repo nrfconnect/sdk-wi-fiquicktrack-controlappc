@@ -18,7 +18,9 @@
 #ifndef _HS2_PROFILE
 #define _HS2_PROFILE
 
+#ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) ((sizeof x) / (sizeof *x))
+#endif
 
 struct tlv_to_profile {
     unsigned short tlv_id;

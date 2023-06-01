@@ -34,6 +34,14 @@
 #endif
 #define UPLOAD_TC_APP_LOG 1
 
+#ifdef CONFIG_ZEPHYR
+#define MSG_CONFIRM 0x800
+#endif /* CONFIG_ZEPHYR */
+
+#ifndef INADDR_NONE
+#define INADDR_NONE 0xffffffff
+#endif /* INADDR_NONE */
+
 /* Log */
 enum {
     LOG_LEVEL_DEBUG_VERBOSE = 0,

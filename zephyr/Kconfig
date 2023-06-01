@@ -1,0 +1,10 @@
+#
+# Copyright (c) 2023 Nordic Semiconductor
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+config WFA_QT_CONTROL_APP
+	# Need full POSIX from libc, Zephyr's POSIX support is only partial
+	depends on !POSIX_API
+	bool "WFA Quicktrack control app"
