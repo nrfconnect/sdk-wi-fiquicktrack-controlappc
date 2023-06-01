@@ -7,10 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Run compliance checks on patch series (PR)
     steps:
-    - name: Update PATH for west
-      run: |
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
-
     - name: Checkout the code
       uses: actions/checkout@v3
       with:
@@ -31,10 +27,8 @@ jobs:
         pip3 install -U setuptools
         pip3 install -U wheel
         grep -E "python-magic|junitparser|lxml|gitlint|pylint|pykwalify|yamllint" scripts/requirements-fixed.txt | xargs pip3 install -U
-        grep -E "west" scripts/requirements-fixed.txt | xargs pip3 install -U
-        pip3 show -f west
 
-    - name: West init and update
+    - name: Clone Zephyr downstream
       env:
         BASE_REF: ${{ github.base_ref }}
       working-directory: wfa_qt_app
@@ -49,9 +43,8 @@ jobs:
         git rebase origin/${BASE_REF}
         # debug
         git log  --pretty=oneline | head -n 10
-        west init -l .
-        west update
-        west zephyr-export
+        # Clone downstream Zephyr (no west needed as we only need the scripts)
+        git clone https://github.com/nrfconnect/sdk-zephyr
 
     - name: Run CODEOWNERS test
       id: codeowners
@@ -70,12 +63,16 @@ jobs:
       working-directory: wfa_qt_app
       if: contains(github.event.pull_request.user.login, 'dependabot[bot]') != true
       run: |
-        export ZEPHYR_BASE="$(dirname "$(pwd)")/zephyr"
+        export ZEPHYR_BASE="$(dirname "$(pwd)")/wfa_qt_app/sdk-zephyr"
         # debug
         ls -la
         git log --pretty=oneline | head -n 10
         # For now we run KconfigBasic, but we should transition to Kconfig
-        $ZEPHYR_BASE/scripts/ci/check_compliance.py --annotate -e Kconfig \
+        $ZEPHYR_BASE/scripts/ci/check_compliance.py --annotate \
+        -e KconfigBasic \
+        -e checkpatch  \
+        -e Kconfig \
+        -e DevicetreeBindings \
         -c origin/${BASE_REF}..
 
     - name: upload-results
@@ -90,7 +87,7 @@ jobs:
       working-directory: wfa_qt_app
       if: contains(github.event.pull_request.user.login, 'dependabot[bot]') != true
       run: |
-        export ZEPHYR_BASE="$(dirname "$(pwd)")/zephyr"
+        export ZEPHYR_BASE="$(dirname "$(pwd)")/wfa_qt_app/sdk-zephyr"
         if [[ ! -s "compliance.xml" ]]; then
           exit 1;
         fi
