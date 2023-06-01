@@ -2072,7 +2072,7 @@ static int send_sta_disconnect_handler(struct packet_wrapper *req, struct packet
     struct wpa_ctrl *w = NULL;
     char *message = TLV_VALUE_WPA_S_DISCONNECT_NOT_OK;
     char buffer[256], response[1024];
-    int status;
+    int status = TLV_VALUE_STATUS_NOT_OK;
     size_t resp_len;
 
     /* Open WPA supplicant UDS socket */
