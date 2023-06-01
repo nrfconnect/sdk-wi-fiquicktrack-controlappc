@@ -20,10 +20,45 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#ifdef CONFIG_ZEPHYR
+#include <zephyr/posix/sys/select.h>
+#else
+#include "sys/select.h"
+#endif
 
 #ifdef CONFIG_NATIVE_WINDOWS
 #include "common.h"
 #endif /* CONFIG_NATIVE_WINDOWS */
+
+#ifdef CONFIG_ZEPHYR
+/* Convenience macros for operations on timevals.
+   NOTE: `timercmp' does not work for >= or <=.  */
+# define timerisset(tvp)        ((tvp)->tv_sec || (tvp)->tv_usec)
+# define timerclear(tvp)        ((tvp)->tv_sec = (tvp)->tv_usec = 0)
+# define timercmp(a, b, CMP)                                                  \
+  (((a)->tv_sec == (b)->tv_sec)                                               \
+   ? ((a)->tv_usec CMP (b)->tv_usec)                                          \
+   : ((a)->tv_sec CMP (b)->tv_sec))
+# define timeradd(a, b, result)                                               \
+  do {                                                                        \
+    (result)->tv_sec = (a)->tv_sec + (b)->tv_sec;                             \
+    (result)->tv_usec = (a)->tv_usec + (b)->tv_usec;                          \
+    if ((result)->tv_usec >= 1000000)                                         \
+      {                                                                       \
+        ++(result)->tv_sec;                                                   \
+        (result)->tv_usec -= 1000000;                                         \
+      }                                                                       \
+  } while (0)
+# define timersub(a, b, result)                                               \
+  do {                                                                        \
+    (result)->tv_sec = (a)->tv_sec - (b)->tv_sec;                             \
+    (result)->tv_usec = (a)->tv_usec - (b)->tv_usec;                          \
+    if ((result)->tv_usec < 0) {                                              \
+      --(result)->tv_sec;                                                     \
+      (result)->tv_usec += 1000000;                                           \
+    }                                                                         \
+  } while (0)
+#endif
 
 #include "eloop.h"
 
@@ -252,9 +287,9 @@ static void eloop_process_pending_signals(void)
 	eloop.signaled = 0;
 
 	if (eloop.pending_terminate) {
-#ifndef CONFIG_NATIVE_WINDOWS
+#if !defined(CONFIG_NATIVE_WINDOWS) && !defined(CONFIG_ZEPHYR)
 		alarm(0);
-#endif /* CONFIG_NATIVE_WINDOWS */
+#endif /* CONFIG_NATIVE_WINDOWS && CONFIG_ZEPHYR */
 		eloop.pending_terminate = 0;
 	}
 
@@ -293,7 +328,6 @@ int qt_eloop_register_signal(int sig,
 
 	return 0;
 }
-
 
 void qt_eloop_run(void)
 {
