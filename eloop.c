@@ -20,7 +20,11 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#ifdef CONFIG_ZEPHYR
+#include <zephyr/posix/sys/select.h>
+#else
 #include "sys/select.h"
+#endif
 
 #ifdef CONFIG_NATIVE_WINDOWS
 #include "common.h"
@@ -274,6 +278,7 @@ static void eloop_handle_signal(int sig)
 }
 
 
+#ifndef CONFIG_ZEPHYR
 static void eloop_process_pending_signals(void)
 {
 	int i;
@@ -298,6 +303,7 @@ static void eloop_process_pending_signals(void)
 		}
 	}
 }
+#endif
 
 
 int qt_eloop_register_signal(int sig,
@@ -361,7 +367,9 @@ void qt_eloop_run(void)
 			free(rfds);
 			return;
 		}
+#ifndef CONFIG_ZEPHYR
 		eloop_process_pending_signals();
+#endif
 
 		/* check if some registered timeouts have occurred */
 		if (eloop.timeout) {

@@ -234,7 +234,9 @@ struct tlv_to_config_name* find_generic_tlv_config(int tlv_id, struct tlv_to_con
 static int get_control_app_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
 static int start_loopback_server(struct packet_wrapper *req, struct packet_wrapper *resp);
 static int stop_loop_back_server_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
+#ifndef CONFIG_ZEPHYR
 static int create_bridge_network_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
+#endif
 static int assign_static_ip_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
 static int get_mac_addr_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
 static int get_ip_addr_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
@@ -243,6 +245,7 @@ static int start_dhcp_handler(struct packet_wrapper *req, struct packet_wrapper 
 static int stop_dhcp_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
 static int get_wsc_pin_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
 static int get_wsc_cred_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
+#ifndef CONFIG_ZEPHYR
 /* AP */
 static int stop_ap_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
 static int configure_ap_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
@@ -253,6 +256,7 @@ static int send_ap_btm_handler(struct packet_wrapper *req, struct packet_wrapper
 static int trigger_ap_channel_switch(struct packet_wrapper *req, struct packet_wrapper *resp);
 static int start_wps_ap_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
 static int configure_ap_wsc_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
+#endif
 /* STA */
 static int stop_sta_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
 static int configure_sta_handler(struct packet_wrapper *req, struct packet_wrapper *resp);
