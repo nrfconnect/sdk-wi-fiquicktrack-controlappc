@@ -17,8 +17,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef CONFIG_ZEPHYR
+#include <zephyr/net/socket.h>
+#include <zephyr/net/net_ip.h>
+#else
 #include <unistd.h>
 #include <netinet/in.h>
+#endif
 #include <errno.h>
 
 #include "vendor_specific.h"
