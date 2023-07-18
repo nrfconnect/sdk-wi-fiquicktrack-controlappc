@@ -26,10 +26,12 @@ zephyr_include_directories_ifdef(CONFIG_WFA_QT_CONTROL_APP
 
 zephyr_library_sources_ifdef(CONFIG_WFA_QT_CONTROL_APP
 	# Zephyr's port of the Indigo API
+	${SOURCES_BASE}/zephyr/src/main.c
 	${SOURCES_BASE}/zephyr/src/indigo_api_callback_dut.c
 	${SOURCES_BASE}/zephyr/src/vendor_specific_dut.c
 	${SOURCES_BASE}/zephyr/src/utils.c
 	${SOURCES_BASE}/eloop.c
 	${SOURCES_BASE}/indigo_api.c
 	${SOURCES_BASE}/indigo_packet.c
+	${SOURCES_BASE}/qt_client.c
 )
