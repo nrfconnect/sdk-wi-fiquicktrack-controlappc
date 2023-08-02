@@ -100,95 +100,21 @@ void stop_dhcp_client()
 }
 
 #ifdef CONFIG_WPS
-wps_setting *p_wps_setting = NULL;
-wps_setting customized_wps_settings_ap[AP_SETTING_NUM];
-wps_setting customized_wps_settings_sta[STA_SETTING_NUM];
-
 void save_wsc_setting(wps_setting *s, char *entry, int len)
 {
-    char *p = NULL;
-
-    (void) len;
-
-    p = strchr(entry, '\n');
-    if (p)
-        p++;
-    else
-        p = entry;
-
-    sscanf(p, "%[^:]:%[^:]:%s", s->wkey, s->value, s->attr);
+    /*TODO: Implement this for zephyr */
 }
 
 wps_setting* __get_wps_setting(int len, char *buffer, enum wps_device_role role)
 {
-    char *token = strtok(buffer , ",");
-    wps_setting *s = NULL;
-    int i = 0;
+    /*TODO: Implement this for zephyr */
 
-    (void) len;
-
-    if (role == WPS_AP) {
-        memset(customized_wps_settings_ap, 0, sizeof(customized_wps_settings_ap));
-        p_wps_setting = customized_wps_settings_ap;
-        while (token != NULL) {
-            s = &p_wps_setting[i++];
-            save_wsc_setting(s, token, strlen(token));
-            token = strtok(NULL, ",");
-        }
-    } else {
-        memset(customized_wps_settings_sta, 0, sizeof(customized_wps_settings_sta));
-        p_wps_setting = customized_wps_settings_sta;
-        while (token != NULL) {
-            s = &p_wps_setting[i++];
-            save_wsc_setting(s, token, strlen(token));
-            token = strtok(NULL, ",");
-        }
-    }
-    return p_wps_setting;
+    return NULL;
 }
 
 wps_setting* get_vendor_wps_settings(enum wps_device_role role)
 {
-    /*
-     * Please implement the vendor proprietary function to get WPS OOB and required settings.
-     * */
-#define WSC_SETTINGS_FILE_AP "/tmp/wsc_settings_APUT"
-#define WSC_SETTINGS_FILE_STA "/tmp/wsc_settings_STAUT"
-    int len = 0;
-    char pipebuf[S_BUFFER_LEN];
-    char *parameter_ap[] = {"cat", WSC_SETTINGS_FILE_AP, NULL, NULL};
-    char *parameter_sta[] = {"cat", WSC_SETTINGS_FILE_STA, NULL, NULL};
-
-    memset(pipebuf, 0, sizeof(pipebuf));
-    if (role == WPS_AP) {
-        if (0 == access(WSC_SETTINGS_FILE_AP, F_OK)) {
-            // use customized ap wsc settings
-            len = pipe_command(pipebuf, sizeof(pipebuf), "/usr/bin/cat", parameter_ap);
-            if (len) {
-                indigo_logger(LOG_LEVEL_INFO, "wsc settings APUT:\n %s", pipebuf);
-                return __get_wps_setting(len, pipebuf, WPS_AP);
-            } else {
-                indigo_logger(LOG_LEVEL_INFO, "wsc settings APUT: no data");
-            }
-        } else {
-            indigo_logger(LOG_LEVEL_ERROR, "APUT: WPS Erorr. Failed to get settings.");
-            return NULL;
-        }
-    } else {
-        if (0 == access(WSC_SETTINGS_FILE_STA, F_OK)) {
-            // use customized sta wsc settings
-            len = pipe_command(pipebuf, sizeof(pipebuf), "/usr/bin/cat", parameter_sta);
-            if (len) {
-                indigo_logger(LOG_LEVEL_INFO, "wsc settings STAUT:\n %s", pipebuf);
-                return __get_wps_setting(len, pipebuf, WPS_STA);
-            } else {
-                indigo_logger(LOG_LEVEL_INFO, "wsc settings STAUT: no data");
-            }
-        } else {
-            indigo_logger(LOG_LEVEL_ERROR, "STAUT: WPS Erorr. Failed to get settings.");
-            return NULL;
-        }
-    }
+    /*TODO: Implement this for zephyr */
 
     return NULL;
 }
