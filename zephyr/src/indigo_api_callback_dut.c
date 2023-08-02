@@ -220,21 +220,12 @@ static int stop_ap_handler(struct packet_wrapper *req, struct packet_wrapper *re
         indigo_logger(LOG_LEVEL_DEBUG, "Reset Type: %d", reset);
     }
 
-    if (reset == RESET_TYPE_INIT) {
-        open_tc_app_log();
-    }
-
     /* TODO: Add functionality to stop Hostapd */
 
     /* reset interfaces info */
     clear_interfaces_resource();
     memset(band_transmitter, 0, sizeof(band_transmitter));
     memset(band_first_wlan, 0, sizeof(band_first_wlan));
-
-    /* Test case teardown case */
-    if (reset == RESET_TYPE_TEARDOWN) {
-        close_tc_app_log();
-    }
 
     fill_wrapper_message_hdr(resp, API_CMD_RESPONSE, req->hdr.seq);
     fill_wrapper_tlv_byte(resp, TLV_STATUS, status);
@@ -1679,38 +1670,7 @@ static int get_ip_addr_handler(struct packet_wrapper *req, struct packet_wrapper
 }
 
 static int stop_sta_handler(struct packet_wrapper *req, struct packet_wrapper *resp) {
-    int reset = 0, status = TLV_VALUE_STATUS_NOT_OK;
-    char reset_type[16];
-    char *message = TLV_VALUE_WPA_S_STOP_NOT_OK;
-    struct tlv_hdr *tlv = NULL;
-
-    /* TLV: RESET_TYPE */
-    tlv = find_wrapper_tlv_by_id(req, TLV_RESET_TYPE);
-    memset(reset_type, 0, sizeof(reset_type));
-    if (tlv) {
-        memcpy(reset_type, tlv->value, tlv->len);
-        reset = atoi(reset_type);
-        indigo_logger(LOG_LEVEL_DEBUG, "Reset Type: %d", reset);
-    }
-
-    if (reset == RESET_TYPE_INIT) {
-        open_tc_app_log();
-
-        /* remove pac file if needed */
-        if (strlen(pac_file_path)) {
-            remove_pac_file(pac_file_path);
-            memset(pac_file_path, 0, sizeof(pac_file_path));
-        }
-    }
-
-    /* Test case teardown case */
-    if (reset == RESET_TYPE_TEARDOWN) {
-        close_tc_app_log();
-    }
-
-    fill_wrapper_message_hdr(resp, API_CMD_RESPONSE, req->hdr.seq);
-    fill_wrapper_tlv_byte(resp, TLV_STATUS, status);
-    fill_wrapper_tlv_bytes(resp, TLV_MESSAGE, strlen(message), message);
+    /* TODO: Implement this for zephyr */
 
     return 0;
 }
@@ -2858,114 +2818,9 @@ done:
     return 0;
 }
 
-static int run_hs20_osu_client(const char *params)
-{
-	char buf[BUFFER_LEN], cmd[S_BUFFER_LEN];
-	int res;
-
-	res = snprintf(cmd, sizeof(cmd),
-		       "%s -w \"%s\" -r hs20-osu-client.res -dddKt -f /var/log/hs20-osu-client.log",
-		       HS20_OSU_CLIENT,
-		       WPAS_CTRL_PATH_DEFAULT "/");
-	if (res < 0 || res >= (int) sizeof(cmd))
-		return -1;
-
-	res = snprintf(buf, sizeof(buf), "%s %s", cmd, params);
-	if (res < 0 || res >= (int) sizeof(buf))
-		return -1;
-
-    indigo_logger(LOG_LEVEL_DEBUG, "Run: %s", buf);
-
-	if (system(buf) != 0) {
-		indigo_logger(LOG_LEVEL_ERROR, "Failed to run: %s", buf);
-		return -1;
-	}
-
-	return 0;
-}
-
 static int set_sta_install_ppsmo_handler(struct packet_wrapper *req, struct packet_wrapper *resp) {
-    int status = TLV_VALUE_STATUS_NOT_OK;
-    char *message = TLV_VALUE_HS2_INSTALL_PPSMO_NOT_OK;
-    int len;
-    char buffer[L_BUFFER_LEN], ppsmo_file[S_BUFFER_LEN];
-    struct tlv_hdr *tlv;
-    char *fqdn = NULL;
-    char fqdn_buf[S_BUFFER_LEN];
-
-    memset(buffer, 0, sizeof(buffer));
-    snprintf(buffer, sizeof(buffer), "ctrl_interface=%s\nap_scan=1\n", WPAS_CTRL_PATH_DEFAULT);
-
-    len = strlen(buffer);
-    if (len) {
-        write_file(get_wpas_conf_file(), buffer, len);
-    }
 
     /* TODO: Implement the functionality for zephyr */
-
-    tlv = find_wrapper_tlv_by_id(req, TLV_PPSMO_FILE);
-    if (tlv) {
-        memset(ppsmo_file, 0, sizeof(ppsmo_file));
-        memcpy(ppsmo_file, tlv->value, tlv->len);
-    } else {
-        goto done;
-    }
-
-    unlink("pps-tnds.xml");
-    snprintf(buffer, sizeof(buffer), "wget -T 10 -t 3 -O pps-tnds.xml '%s'", ppsmo_file);
-    indigo_logger(LOG_LEVEL_DEBUG, "RUN: %s\n", buffer);
-    if (system(buffer) != 0) {
-        indigo_logger(LOG_LEVEL_ERROR, "Failed to download PPS MO from %s\n", ppsmo_file);
-        goto done;
-    }
-
-    snprintf(buffer, sizeof(buffer), "from_tnds pps-tnds.xml pps.xml");
-    if (run_hs20_osu_client(buffer) < 0)
-        goto done;
-    sleep(2);
-
-    memset(fqdn_buf, 0, sizeof(fqdn_buf));
-    if (run_hs20_osu_client("get_fqdn pps.xml") == 0) {
-		FILE *f = fopen("pps-fqdn", "r");
-		if (f) {
-			if (fgets(fqdn_buf, sizeof(fqdn_buf), f)) {
-				fqdn_buf[sizeof(fqdn_buf) - 1] = '\0';
-				fqdn = fqdn_buf;
-                if (fqdn)
-                    indigo_logger(LOG_LEVEL_DEBUG, "FQDN: %s", fqdn);
-                else {
-                    indigo_logger(LOG_LEVEL_ERROR, "Get FQDN ERROR" );
-                    goto done;
-                }
-            }
-			fclose(f);
-		}
-	}
-
-    mkdir("SP", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-	snprintf(buffer, sizeof(buffer), "SP/%s", fqdn);
-	mkdir(buffer, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-
-    snprintf(buffer, sizeof(buffer), "dl_aaa_ca pps.xml SP/%s/aaa-ca.pem", fqdn);
-    if (run_hs20_osu_client(buffer) < 0) {
-        indigo_logger(LOG_LEVEL_ERROR, "Failed to download AAA CA cert");
-        goto done;
-    }
-
-    snprintf(buffer, sizeof(buffer), "set_pps pps.xml");
-	if (run_hs20_osu_client(buffer) < 0) {
-		indigo_logger(LOG_LEVEL_ERROR,
-			  "errorCode,Failed to configure credential from PPSMO");
-        goto done;
-	}
-
-    status = TLV_VALUE_STATUS_OK;
-    message = TLV_VALUE_HS2_INSTALL_PPSMO_OK;
-
-done:
-    fill_wrapper_message_hdr(resp, API_CMD_RESPONSE, req->hdr.seq);
-    fill_wrapper_tlv_byte(resp, TLV_STATUS, status);
-    fill_wrapper_tlv_bytes(resp, TLV_MESSAGE, strlen(message), message);
 
     return 0;
 }
