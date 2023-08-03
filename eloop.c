@@ -287,9 +287,9 @@ static void eloop_process_pending_signals(void)
 	eloop.signaled = 0;
 
 	if (eloop.pending_terminate) {
-#ifndef CONFIG_NATIVE_WINDOWS
+#if !defined(CONFIG_NATIVE_WINDOWS) && !defined(CONFIG_ZEPHYR)
 		alarm(0);
-#endif /* CONFIG_NATIVE_WINDOWS */
+#endif /* CONFIG_NATIVE_WINDOWS && CONFIG_ZEPHYR */
 		eloop.pending_terminate = 0;
 	}
 
