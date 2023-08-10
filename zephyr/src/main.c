@@ -12,7 +12,7 @@
 
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(wfa_qt, WFA_QT_LOG_LEVEL_DEFAULT);
+LOG_MODULE_REGISTER(wfa_qt, CONFIG_WFA_QT_LOG_LEVEL_DEFAULT);
 int control_socket_init(int port);
 void qt_main(void);
 K_THREAD_DEFINE(qt_main_tid,
