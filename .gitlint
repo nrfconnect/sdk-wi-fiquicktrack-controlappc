@@ -14,7 +14,7 @@ debug = false
 # Set the extra-path where gitlint will search for user defined rules
 # See http://jorisroovers.github.io/gitlint/user_defined_rules for details
 # This is as per GH Actions CI
-extra-path=.gitlint
+extra-path=sdk-zephyr/scripts/gitlint
 
 [title-max-length-no-revert]
 line-length=120
