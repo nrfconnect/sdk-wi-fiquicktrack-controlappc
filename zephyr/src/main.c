@@ -5,12 +5,16 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
 
 #include "eloop.h"
 #include "indigo_api.h"
 #include "utils.h"
 
 #include <zephyr/logging/log.h>
+#include <zephyr/kernel.h>
+
+#define WIRELESS_INTERFACE_DEFAULT "wlan0"
 
 LOG_MODULE_REGISTER(wfa_qt, CONFIG_WFA_QT_LOG_LEVEL_DEFAULT);
 int control_socket_init(int port);
@@ -32,8 +36,6 @@ static void print_welcome() {
 
 void qt_main(void) {
     int service_socket = -1;
-    int ret =0;
-
 
     /* Welcome message */
     print_welcome();
@@ -64,5 +66,4 @@ void qt_main(void) {
         close(service_socket);
     }
 
-    return 0;
 }
