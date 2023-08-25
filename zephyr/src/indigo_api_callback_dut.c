@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/stat.h>
 
 #include <zephyr/net/net_ip.h>
