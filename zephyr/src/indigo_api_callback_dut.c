@@ -185,7 +185,7 @@ static int reset_device_handler(struct packet_wrapper *req, struct packet_wrappe
 
     vendor_device_reset();
 
-    sleep(1);
+    k_sleep(K_SECONDS(1));
 
     status = TLV_VALUE_STATUS_OK;
     message = TLV_VALUE_RESET_OK;
@@ -809,7 +809,7 @@ static int start_ap_handler(struct packet_wrapper *req, struct packet_wrapper *r
         get_hostapd_debug_arguments(),
         get_all_hapd_conf_files(&swap_hostapd));
     len = system(buffer);
-    sleep(1);
+    k_sleep(K_SECONDS(1));
 
     /* Bring up VAPs with MBSSID disable using WFA hostapd */
     if (swap_hostapd) {
@@ -823,7 +823,7 @@ static int start_ap_handler(struct packet_wrapper *req, struct packet_wrapper *r
                 get_hostapd_debug_arguments(),
                 get_all_hapd_conf_files(&swap_hostapd));
         len = system(buffer);
-        sleep(1);
+        k_sleep(K_SECONDS(1));
 #endif
     }
 
@@ -954,7 +954,7 @@ static int configure_ap_wsc_handler(struct packet_wrapper *req, struct packet_wr
                 get_hostapd_debug_arguments(),
                 get_all_hapd_conf_files(&swap_hostapd));
         len_3 = system(buffer);
-        sleep(1);
+        k_sleep(K_SECONDS(1));
 #endif
     }
 
@@ -2617,7 +2617,7 @@ static int sta_scan_handler(struct packet_wrapper *req, struct packet_wrapper *r
         goto done;
     }
     indigo_logger(LOG_LEVEL_DEBUG, "%s -> resp: %s\n", buffer, response);
-    sleep(10);
+    k_sleep(K_SECONDS(10));
 
     status = TLV_VALUE_STATUS_OK;
     message = TLV_VALUE_OK;
@@ -2680,7 +2680,7 @@ static int send_sta_anqp_query_handler(struct packet_wrapper *req, struct packet
         indigo_logger(LOG_LEVEL_ERROR, "Failed to execute the command. Response: %s", response);
         goto done;
     }
-    sleep(10);
+    k_sleep(K_SECONDS(10));
 
     /* TLV: BSSID */
     tlv = find_wrapper_tlv_by_id(req, TLV_BSSID);
