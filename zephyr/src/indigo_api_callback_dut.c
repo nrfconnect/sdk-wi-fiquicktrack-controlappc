@@ -41,15 +41,6 @@ extern struct sockaddr_in *tool_addr;
 int sta_configured = 0;
 int sta_started = 0;
 
-extern const char *inet_ntop(int af, const void *src, char *dst, size_t size)
-{
-    if (af == AF_INET) {
-        struct in_addr *in = (struct in_addr *)src;
-        return net_addr_ntop(af, (const void *)in, dst, size);
-    }
-    return NULL;
-}
-
 void register_apis() {
     /* Basic */
     register_api(API_GET_IP_ADDR, NULL, get_ip_addr_handler);
