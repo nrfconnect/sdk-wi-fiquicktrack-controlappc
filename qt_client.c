@@ -20,6 +20,7 @@
 #ifdef CONFIG_ZEPHYR
 #include <zephyr/net/socket.h>
 #include <zephyr/net/net_ip.h>
+#include <zephyr/shell/shell.h>
 #else
 #include <unistd.h>
 #include <netinet/in.h>
@@ -104,6 +105,12 @@ static void control_receive_message(int sock, void *eloop_ctx, void *sock_ctx) {
         indigo_logger(LOG_LEVEL_INFO, "API %s: Return execution result", api->name);
         len = assemble_packet(buffer, BUFFER_LEN, &resp);
         sendto(sock, (const char *)buffer, len, MSG_CONFIRM, (const struct sockaddr *) &from, fromlen);
+#ifdef CONFIG_ZEPHYR
+        if(!strcmp(api->name, "DEVICE_RESET")) {
+		k_msleep(500);
+		shell_execute_cmd(NULL, "kernel reboot cold");
+	}
+#endif
     } else {
         indigo_logger(LOG_LEVEL_DEBUG, "API %s (0x%04x): No handle function", api ? api->name : "Unknown", req.hdr.type);
     }
