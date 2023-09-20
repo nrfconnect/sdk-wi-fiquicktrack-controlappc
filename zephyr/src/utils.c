@@ -1367,4 +1367,3 @@ int insert_wpa_network_config(char *config) {
 
 void remove_pac_file(char *path) {
 }
-
