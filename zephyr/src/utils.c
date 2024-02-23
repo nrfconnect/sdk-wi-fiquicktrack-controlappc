@@ -917,10 +917,10 @@ int set_hapd_full_exec_path(char* path) {
 char* get_hapd_ctrl_path_by_id(struct interface_info* wlan) {
     memset(hapd_full_ctrl_path, 0, sizeof(hapd_full_ctrl_path));
     if (wlan) {
-        sprintf(hapd_full_ctrl_path, "%s/%s", hapd_ctrl_path, wlan->ifname);
+        snprintf(hapd_full_ctrl_path, sizeof(hapd_full_ctrl_path), "%s/%s", hapd_ctrl_path, wlan->ifname);
     }
     else {
-        sprintf(hapd_full_ctrl_path, "%s/%s", hapd_ctrl_path, get_default_wireless_interface_info());
+        snprintf(hapd_full_ctrl_path, sizeof(hapd_full_ctrl_path), "%s/%s", hapd_ctrl_path, get_default_wireless_interface_info());
     }
     printf("hapd_full_ctrl_path: %s, wlan %p\n", hapd_full_ctrl_path, wlan);
     return hapd_full_ctrl_path;
@@ -928,7 +928,7 @@ char* get_hapd_ctrl_path_by_id(struct interface_info* wlan) {
 
 char* get_hapd_ctrl_path() {
     memset(hapd_full_ctrl_path, 0, sizeof(hapd_full_ctrl_path));
-    sprintf(hapd_full_ctrl_path, "%s/%s", hapd_ctrl_path, get_default_wireless_interface_info());
+    snprintf(hapd_full_ctrl_path, sizeof(hapd_full_ctrl_path), "%s/%s", hapd_ctrl_path, get_default_wireless_interface_info());
     return hapd_full_ctrl_path;
 }
 
@@ -999,13 +999,13 @@ int set_wpas_full_exec_path(char* path) {
 
 char* get_wpas_ctrl_path() {
     memset(wpas_full_ctrl_path, 0, sizeof(wpas_full_ctrl_path));
-    sprintf(wpas_full_ctrl_path, "%s/%s", wpas_ctrl_path, get_default_wireless_interface_info());
+    snprintf(wpas_full_ctrl_path, sizeof(wpas_full_ctrl_path), "%s/%s", wpas_ctrl_path, get_default_wireless_interface_info());
     return wpas_full_ctrl_path;
 }
 
 char* get_wpas_if_ctrl_path(char* if_name) {
     memset(wpas_full_ctrl_path, 0, sizeof(wpas_full_ctrl_path));
-    sprintf(wpas_full_ctrl_path, "%s/%s", wpas_ctrl_path, if_name);
+    snprintf(wpas_full_ctrl_path, sizeof(wpas_full_ctrl_path), "%s/%s", wpas_ctrl_path, if_name);
     return wpas_full_ctrl_path;
 }
 int set_wpas_ctrl_path(char* path) {
@@ -1332,10 +1332,10 @@ int get_key_value(char *value, char *buffer, char *token) {
     }
 
     memset(_token, 0, sizeof(_token));
-    sprintf(_token, "\n%s=", token);
+    snprintf(_token, sizeof(_token), "\n%s=", token);
     ptr = strstr(buffer, _token);
     if (!ptr) {
-        sprintf(_token, "%s=", token);
+        snprintf(_token, sizeof(_token), "%s=", token);
         if (strncmp(buffer, _token, strlen(_token)) == 0) {
             ptr = buffer;
         }

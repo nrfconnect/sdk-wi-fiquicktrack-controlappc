@@ -165,7 +165,7 @@ static int reset_device_handler(struct packet_wrapper *req, struct packet_wrappe
     } else if (atoi(role) == DUT_TYPE_P2PUT) {
 #ifdef CONFIG_P2P
         /* If TP is P2P client, GO can't stop before client removes group monitor if */
-        // sprintf(buffer, "killall %s 1>/dev/null 2>/dev/null", get_wpas_exec_file());
+        // snprintf(buffer, sizeof(buffer), "killall %s 1>/dev/null 2>/dev/null", get_wpas_exec_file());
         // reset_interface_ip(get_wireless_interface());
         if (strlen(log_level)) {
             set_wpas_debug_level(get_debug_level(atoi(log_level)));
@@ -291,13 +291,13 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
 
 #if HOSTAPD_SUPPORT_MBSSID
     if ((wlanp->mbssid_enable && !wlanp->transmitter) || (band_first_wlan[wlanp->band])) {
-        sprintf(output, "bss=%s\nctrl_interface=%s\n", wlanp->ifname, HAPD_CTRL_PATH_DEFAULT);
+        snprintf(output, sizeof(output), "bss=%s\nctrl_interface=%s\n", wlanp->ifname, HAPD_CTRL_PATH_DEFAULT);
         is_multiple_bssid = 1;
     }
     else
-        sprintf(output, "ctrl_interface=%s\nctrl_interface_group=0\ninterface=%s\n", HAPD_CTRL_PATH_DEFAULT, wlanp->ifname);
+        snprintf(output, sizeof(output), "ctrl_interface=%s\nctrl_interface_group=0\ninterface=%s\n", HAPD_CTRL_PATH_DEFAULT, wlanp->ifname);
 #else
-    sprintf(output, "ctrl_interface=%s\nctrl_interface_group=0\ninterface=%s\n", HAPD_CTRL_PATH_DEFAULT, wlanp->ifname);
+    snprintf(output, sizeof(output), "ctrl_interface=%s\nctrl_interface_group=0\ninterface=%s\n", HAPD_CTRL_PATH_DEFAULT, wlanp->ifname);
 #endif
 
 #ifdef _RESERVED_
@@ -347,7 +347,7 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
             token = strtok(buffer, delimit);
 
             while(token != NULL) {
-                sprintf(cfg_item, "%s=%s\n", cfg->config_name, token);
+                snprintf(cfg_item, sizeof(cfg_item), "%s=%s\n", cfg->config_name, token);
                 strcat(output, cfg_item);
                 token = strtok(NULL, delimit);
             }
@@ -359,7 +359,7 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
 
             memset(mac_addr, 0, sizeof(mac_addr));
             get_mac_address(mac_addr, sizeof(mac_addr), get_wireless_interface());
-            sprintf(cfg_item, "hessid=%s\n", mac_addr);
+            snprintf(cfg_item, sizeof(cfg_item), "hessid=%s\n", mac_addr);
             strcat(output, cfg_item);
             continue;
         }
@@ -381,7 +381,7 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
                 hs2_config = (char *)profile->profile[atoi(buffer)];
             }
 
-            sprintf(cfg_item, "%s", hs2_config);
+            snprintf(cfg_item, sizeof(cfg_item), "%s", hs2_config);
             strcat(output, cfg_item);
             continue;
         }
@@ -402,7 +402,7 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
                 /* WPS OOB: Out-of-Box */
                 for (j = 0; j < AP_SETTING_NUM; j++) {
                     memset(cfg_item, 0, sizeof(cfg_item));
-                    sprintf(cfg_item, "%s=%s\n", s[j].wkey, s[j].value);
+                    snprintf(cfg_item, sizeof(cfg_item), "%s=%s\n", s[j].wkey, s[j].value);
                     strcat(output, cfg_item);
                 }
                 indigo_logger(LOG_LEVEL_INFO, "APUT Configure WPS: OOB.");
@@ -414,12 +414,12 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
                     if (atoi(s[j].attr) == atoi(WPS_OOB_ONLY)) {
                         if (!(memcmp(s[j].wkey, WPS_OOB_STATE, strlen(WPS_OOB_STATE)))) {
                             /* set wps state to Configured compulsorily */
-                            sprintf(cfg_item, "%s=%s\n", s[j].wkey, WPS_OOB_CONFIGURED);
+                            snprintf(cfg_item, sizeof(cfg_item), "%s=%s\n", s[j].wkey, WPS_OOB_CONFIGURED);
                         }
                     }
                     /* set wps common settings */
                     if (atoi(s[j].attr) == atoi(WPS_COMMON)) {
-                        sprintf(cfg_item, "%s=%s\n", s[j].wkey, s[j].value);
+                        snprintf(cfg_item, sizeof(cfg_item), "%s=%s\n", s[j].wkey, s[j].value);
                     }
                     strcat(output, cfg_item);
                 }
@@ -433,13 +433,13 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
         /* wps er support. upnp */
         if (tlv->id == TLV_WPS_ER_SUPPORT) {
             memset(cfg_item, 0, sizeof(cfg_item));
-            sprintf(cfg_item, "upnp_iface=%s\n", wlanp->ifname);
+            snprintf(cfg_item, sizeof(cfg_item), "upnp_iface=%s\n", wlanp->ifname);
             strcat(output, cfg_item);
             memset(cfg_item, 0, sizeof(cfg_item));
-            sprintf(cfg_item, "friendly_name=WPS Access Point\n");
+            snprintf(cfg_item, sizeof(cfg_item), "friendly_name=WPS Access Point\n");
             strcat(output, cfg_item);
             memset(cfg_item, 0, sizeof(cfg_item));
-            sprintf(cfg_item, "model_description=Wireless Access Point\n");
+            snprintf(cfg_item, sizeof(cfg_item), "model_description=Wireless Access Point\n");
             strcat(output, cfg_item);
             continue;
         }
@@ -543,17 +543,17 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
                     );
             if (wlan) {
                 memcpy(buffer, wlan->ifname, strlen(wlan->ifname));
-                sprintf(cfg_item, "%s=%s\n", cfg->config_name, buffer);
+                snprintf(cfg_item, sizeof(cfg_item), "%s=%s\n", cfg->config_name, buffer);
                 strcat(output, cfg_item);
                 if (has_owe) {
                     memset(cfg_item, 0, sizeof(cfg_item));
-                    sprintf(cfg_item, "ignore_broadcast_ssid=1\n");
+                    snprintf(cfg_item, sizeof(cfg_item), "ignore_broadcast_ssid=1\n");
                     strcat(output, cfg_item);
                 }
             }
         } else {
             memcpy(buffer, tlv->value, tlv->len);
-            sprintf(cfg_item, "%s=%s\n", cfg->config_name, buffer);
+            snprintf(cfg_item, sizeof(cfg_item), "%s=%s\n", cfg->config_name, buffer);
             strcat(output, cfg_item);
         }
     }
@@ -620,17 +620,17 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
 
     if (is_6g_only) {
         if (chwidthset == 0) {
-            sprintf(buffer, "he_oper_chwidth=%d\n", chwidth);
+            snprintf(buffer, sizeof(buffer), "he_oper_chwidth=%d\n", chwidth);
             strcat(output, buffer);
         }
         if (chwidth == 1)
             strcat(output, "op_class=133\n");
         else if (chwidth == 2)
             strcat(output, "op_class=134\n");
-        sprintf(buffer, "he_oper_centr_freq_seg0_idx=%d\n", get_6g_center_freq_index(channel, chwidth));
+        snprintf(buffer, sizeof(buffer), "he_oper_centr_freq_seg0_idx=%d\n", get_6g_center_freq_index(channel, chwidth));
         strcat(output, buffer);
         if (unsol_pr_resp_interval) {
-            sprintf(buffer, "unsol_bcast_probe_resp_interval=%d\n", unsol_pr_resp_interval);
+            snprintf(buffer, sizeof(buffer), "unsol_bcast_probe_resp_interval=%d\n", unsol_pr_resp_interval);
             strcat(output, buffer);
         } else {
             strcat(output, "fils_discovery_max_interval=20\n");
@@ -648,10 +648,10 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
             int center_freq = get_center_freq_index(channel, chwidth);
             if (enable_ac) {
                 if (vht_chwidthset == 0) {
-                    sprintf(buffer, "vht_oper_chwidth=%d\n", chwidth);
+                    snprintf(buffer, sizeof(buffer), "vht_oper_chwidth=%d\n", chwidth);
                     strcat(output, buffer);
                 }
-                sprintf(buffer, "vht_oper_centr_freq_seg0_idx=%d\n", center_freq);
+                snprintf(buffer, sizeof(buffer), "vht_oper_centr_freq_seg0_idx=%d\n", center_freq);
                 strcat(output, buffer);
             }
             if (enable_ax) {
@@ -804,7 +804,7 @@ static int start_ap_handler(struct packet_wrapper *req, struct packet_wrapper *r
     int swap_hostapd = 0;
 
     memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "%s -B -t -P /var/run/hostapd.pid -g %s %s -f /var/log/hostapd.log %s",
+    snprintf(buffer, sizeof(buffer), "%s -B -t -P /var/run/hostapd.pid -g %s %s -f /var/log/hostapd.log %s",
         get_hapd_full_exec_path(),
         get_hapd_global_ctrl_path(),
         get_hostapd_debug_arguments(),
@@ -819,7 +819,7 @@ static int start_ap_handler(struct packet_wrapper *req, struct packet_wrapper *r
         system("cp /overlay/hostapd /usr/sbin/hostapd");
         use_openwrt_wpad = 0;
         memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, "%s -B -t -P /var/run/hostapd_1.pid %s -f /var/log/hostapd_1.log %s",
+        snprintf(buffer, sizeof(buffer), "%s -B -t -P /var/run/hostapd_1.pid %s -f /var/log/hostapd_1.log %s",
                 get_hapd_full_exec_path(),
                 get_hostapd_debug_arguments(),
                 get_all_hapd_conf_files(&swap_hostapd));
@@ -950,7 +950,7 @@ static int configure_ap_wsc_handler(struct packet_wrapper *req, struct packet_wr
         system("cp /overlay/hostapd /usr/sbin/hostapd");
         use_openwrt_wpad = 0;
         memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, "%s -B -t -P /var/run/hostapd_1.pid %s -f /var/log/hostapd_1.log %s",
+        snprintf(buffer, sizeof(buffer), "%s -B -t -P /var/run/hostapd_1.pid %s -f /var/log/hostapd_1.log %s",
                 get_hapd_full_exec_path(),
                 get_hostapd_debug_arguments(),
                 get_all_hapd_conf_files(&swap_hostapd));
@@ -1046,35 +1046,35 @@ static int send_ap_btm_handler(struct packet_wrapper *req, struct packet_wrapper
 
     /* Assemble hostapd command for BSS_TM_REQ */
     memset(request, 0, sizeof(request));
-    sprintf(request, "BSS_TM_REQ %s", bssid);
+    snprintf(request, sizeof(request), "BSS_TM_REQ %s", bssid);
     /*  disassoc_imminent=%s */
     if (strlen(disassoc_imminent)) {
         memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, " disassoc_imminent=%s", disassoc_imminent);
+        snprintf(buffer, sizeof(buffer), " disassoc_imminent=%s", disassoc_imminent);
         strcat(request, buffer);
     }
     /* disassoc_timer=%s */
     if (strlen(disassoc_timer)) {
         memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, " disassoc_timer=%s", disassoc_timer);
+        snprintf(buffer, sizeof(buffer), " disassoc_timer=%s", disassoc_timer);
         strcat(request, buffer);
     }
     /* reassoc_retry_delay=%s */
     if (strlen(reassoc_retry_delay)) {
         memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, " mbo=0:%s:0", reassoc_retry_delay);
+        snprintf(buffer, sizeof(buffer), " mbo=0:%s:0", reassoc_retry_delay);
         strcat(request, buffer);
     }
     /* if bss_term_bit && bss_term_tsf && bss_term_duration, then bss_term={bss_term_tsf},{bss_term_duration} */
     if (strlen(bss_term_bit) && strlen(bss_term_tsf) && strlen(bss_term_duration) ) {
         memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, " bss_term=%s,%s", bss_term_tsf, bss_term_duration);
+        snprintf(buffer, sizeof(buffer), " bss_term=%s,%s", bss_term_tsf, bss_term_duration);
         strcat(request, buffer);
     }
     /* candidate_list */
     if (strlen(candidate_list) && atoi(candidate_list) == 1) {
         memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, " pref=1");
+        snprintf(buffer, sizeof(buffer), " pref=1");
         strcat(request, buffer);
     }
     indigo_logger(LOG_LEVEL_DEBUG, "cmd:%s", request);
@@ -1310,9 +1310,9 @@ static int get_mac_addr_handler(struct packet_wrapper *req, struct packet_wrappe
     } else {
 #if HOSTAPD_SUPPORT_MBSSID
         if(bss_info.identifier >= 0) {
-            sprintf(buff, "ssid[%d]", wlan->hapd_bss_id);
+            snprintf(buff, sizeof(buff), "ssid[%d]", wlan->hapd_bss_id);
             get_key_value(connected_ssid, response, buff);
-            sprintf(buff, "bssid[%d]", wlan->hapd_bss_id);
+            snprintf(buff, sizeof(buff), "bssid[%d]", wlan->hapd_bss_id);
             get_key_value(mac_addr, response, buff);
         } else {
             get_key_value(connected_ssid, response, "ssid[0]");
@@ -1596,7 +1596,7 @@ static int trigger_ap_channel_switch(struct packet_wrapper *req, struct packet_w
         offset = -1;
     /* Assemble hostapd command for channel switch */
     memset(request, 0, sizeof(request));
-    sprintf(request, "CHAN_SWITCH 10 %s center_freq1=%d sec_channel_offset=%d bandwidth=80 vht", frequency, center_freq, offset);
+    snprintf(request, sizeof(request), "CHAN_SWITCH 10 %s center_freq1=%d sec_channel_offset=%d bandwidth=80 vht", frequency, center_freq, offset);
     indigo_logger(LOG_LEVEL_INFO, "%s", request);
 
     /* Open hostapd UDS socket */
@@ -1698,7 +1698,7 @@ static int stop_sta_handler(struct packet_wrapper *req, struct packet_wrapper *r
     }
     /* Send command to hostapd UDS socket */
     memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "DISCONNECT");
+    snprintf(buffer, sizeof(buffer), "DISCONNECT");
     memset(response, 0, sizeof(response));
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -1752,7 +1752,7 @@ void generate_sta_config(struct wpa_ctrl *w, struct packet_wrapper *req) {
     tlv = find_wrapper_tlv_by_id(req, TLV_STA_SSID);
     if (tlv) {
 	memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, "SET_NETWORK 0 ssid \"%s\"", tlv->value);
+        snprintf(buffer, sizeof(buffer), "SET_NETWORK 0 ssid \"%s\"", tlv->value);
         memset(response, 0, sizeof(response));
         resp_len = sizeof(response) - 1;
         wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -1760,37 +1760,37 @@ void generate_sta_config(struct wpa_ctrl *w, struct packet_wrapper *req) {
 
     tlv = find_wrapper_tlv_by_id(req, TLV_PSK);
     if (tlv) {
-        sprintf(psk, "%s", tlv->value);
+        snprintf(psk, sizeof(psk), "%s", tlv->value);
     }
 
     tlv = find_wrapper_tlv_by_id(req, TLV_KEY_MGMT);
     if (tlv) {
 	memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, "SET_NETWORK 0 key_mgmt %s", tlv->value);
+        snprintf(buffer, sizeof(buffer), "SET_NETWORK 0 key_mgmt %s", tlv->value);
         memset(response, 0, sizeof(response));
         resp_len = sizeof(response) - 1;
         wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
 
 	memset(buffer, 0, sizeof(buffer));
 	if (strstr(tlv->value, "WPA-PSK")) {
-            sprintf(buffer, "SET_NETWORK 0 psk \"%s\"", psk);
+            snprintf(buffer, sizeof(buffer), "SET_NETWORK 0 psk \"%s\"", psk);
             memset(response, 0, sizeof(response));
             resp_len = sizeof(response) - 1;
             wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
 
             memset(buffer, 0, sizeof(buffer));
-            sprintf(buffer, "SET_NETWORK 0 ieee80211w 1");
+            snprintf(buffer, sizeof(buffer), "SET_NETWORK 0 ieee80211w 1");
             memset(response, 0, sizeof(response));
             resp_len = sizeof(response) - 1;
             wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
 	} else if(strstr(tlv->value, "SAE")) {
-            sprintf(buffer, "SET_NETWORK 0 sae_password \"%s\"", psk);
+            snprintf(buffer, sizeof(buffer), "SET_NETWORK 0 sae_password \"%s\"", psk);
             memset(response, 0, sizeof(response));
             resp_len = sizeof(response) - 1;
             wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
 
             memset(buffer, 0, sizeof(buffer));
-            sprintf(buffer, "SET_NETWORK 0 ieee80211w 2");
+            snprintf(buffer, sizeof(buffer), "SET_NETWORK 0 ieee80211w 2");
             memset(response, 0, sizeof(response));
             resp_len = sizeof(response) - 1;
             wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -1800,7 +1800,7 @@ void generate_sta_config(struct wpa_ctrl *w, struct packet_wrapper *req) {
     tlv = find_wrapper_tlv_by_id(req, TLV_PROTO);
     if (tlv) {
 	memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, "SET_NETWORK 0 proto %s", tlv->value);
+        snprintf(buffer, sizeof(buffer), "SET_NETWORK 0 proto %s", tlv->value);
         memset(response, 0, sizeof(response));
         resp_len = sizeof(response) - 1;
         wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -1809,7 +1809,7 @@ void generate_sta_config(struct wpa_ctrl *w, struct packet_wrapper *req) {
     tlv = find_wrapper_tlv_by_id(req, TLV_PAIRWISE);
     if (tlv) {
 	memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, "SET_NETWORK 0 pairwise %s", tlv->value);
+        snprintf(buffer, sizeof(buffer), "SET_NETWORK 0 pairwise %s", tlv->value);
         memset(response, 0, sizeof(response));
         resp_len = sizeof(response) - 1;
         wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -1818,7 +1818,7 @@ void generate_sta_config(struct wpa_ctrl *w, struct packet_wrapper *req) {
     tlv = find_wrapper_tlv_by_id(req, TLV_GROUP);
     if (tlv) {
 	memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, "SET_NETWORK 0 group %s", tlv->value);
+        snprintf(buffer, sizeof(buffer), "SET_NETWORK 0 group %s", tlv->value);
         memset(response, 0, sizeof(response));
         resp_len = sizeof(response) - 1;
         wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -1827,7 +1827,7 @@ void generate_sta_config(struct wpa_ctrl *w, struct packet_wrapper *req) {
     tlv = find_wrapper_tlv_by_id(req, TLV_SAE_PWE);
     if (tlv) {
 	memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, "SET sae_pwe %s", tlv->value);
+        snprintf(buffer, sizeof(buffer), "SET sae_pwe %s", tlv->value);
         memset(response, 0, sizeof(response));
         resp_len = sizeof(response) - 1;
         wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -1857,13 +1857,13 @@ static int configure_sta_handler(struct packet_wrapper *req, struct packet_wrapp
     }
 
     memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "REMOVE_NETWORK all");
+    snprintf(buffer, sizeof(buffer), "REMOVE_NETWORK all");
     memset(response, 0, sizeof(response));
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
 
     memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "ADD_NETWORK");
+    snprintf(buffer, sizeof(buffer), "ADD_NETWORK");
     memset(response, 0, sizeof(response));
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -1871,7 +1871,7 @@ static int configure_sta_handler(struct packet_wrapper *req, struct packet_wrapp
     generate_sta_config(w, req);
 
     memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "ENABLE_NETWORK 0");
+    snprintf(buffer, sizeof(buffer), "ENABLE_NETWORK 0");
     memset(response, 0, sizeof(response));
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -1913,7 +1913,7 @@ static int associate_sta_handler(struct packet_wrapper *req, struct packet_wrapp
     }
 
     memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "SELECT_NETWORK 0");
+    snprintf(buffer, sizeof(buffer), "SELECT_NETWORK 0");
     memset(response, 0, sizeof(response));
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -1955,7 +1955,7 @@ static int send_sta_disconnect_handler(struct packet_wrapper *req, struct packet
     }
     /* Send command to hostapd UDS socket */
     memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "DISCONNECT");
+    snprintf(buffer, sizeof(buffer), "DISCONNECT");
     memset(response, 0, sizeof(response));
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -1998,7 +1998,7 @@ static int send_sta_reconnect_handler(struct packet_wrapper *req, struct packet_
     }
     /* Send command to hostapd UDS socket */
     memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "RECONNECT");
+    snprintf(buffer, sizeof(buffer), "RECONNECT");
     memset(response, 0, sizeof(response));
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -2118,7 +2118,7 @@ static int send_sta_btm_query_handler(struct packet_wrapper *req, struct packet_
     }
 
     memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "WNM_BSS_QUERY %s", reason_code);
+    snprintf(buffer, sizeof(buffer), "WNM_BSS_QUERY %s", reason_code);
     if (strcmp(candidate_list, "1") == 0) {
         strcat(buffer, " list");
     }
@@ -2152,7 +2152,7 @@ static int start_up_p2p_handler(struct packet_wrapper *req, struct packet_wrappe
     /* TODO: Add functionality to stop Supplicant */
 
     /* Generate P2P config file */
-    sprintf(buffer, "ctrl_interface=%s\n", WPAS_CTRL_PATH_DEFAULT);
+    snprintf(buffer, sizeof(buffer), "ctrl_interface=%s\n", WPAS_CTRL_PATH_DEFAULT);
     /* Add Device name and Device type */
     strcat(buffer, "device_name=WFA P2P Device\n");
     strcat(buffer, "device_type=1-0050F204-1\n");
@@ -2201,7 +2201,7 @@ static int p2p_find_handler(struct packet_wrapper *req, struct packet_wrapper *r
     // P2P_FIND
     memset(buffer, 0, sizeof(buffer));
     memset(response, 0, sizeof(response));
-    sprintf(buffer, "P2P_FIND");
+    snprintf(buffer, sizeof(buffer), "P2P_FIND");
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
     /* Check response */
@@ -2245,7 +2245,7 @@ static int p2p_listen_handler(struct packet_wrapper *req, struct packet_wrapper 
     // P2P_LISTEN
     memset(buffer, 0, sizeof(buffer));
     memset(response, 0, sizeof(response));
-    sprintf(buffer, "P2P_LISTEN");
+    snprintf(buffer, sizeof(buffer), "P2P_LISTEN");
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
     /* Check response */
@@ -2308,7 +2308,7 @@ static int add_p2p_group_handler(struct packet_wrapper *req, struct packet_wrapp
 
     memset(buffer, 0, sizeof(buffer));
     memset(response, 0, sizeof(response));
-    sprintf(buffer, "P2P_GROUP_ADD freq=%s%s", freq, he);
+    snprintf(buffer, sizeof(buffer), "P2P_GROUP_ADD freq=%s%s", freq, he);
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
     /* Check response */
@@ -2364,7 +2364,7 @@ static int stop_p2p_group_handler(struct packet_wrapper *req, struct packet_wrap
     }
     memset(buffer, 0, sizeof(buffer));
     memset(response, 0, sizeof(response));
-    sprintf(buffer, "P2P_GROUP_REMOVE %s", if_name);
+    snprintf(buffer, sizeof(buffer), "P2P_GROUP_REMOVE %s", if_name);
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
     /* Check response */
@@ -2389,7 +2389,7 @@ static int stop_p2p_group_handler(struct packet_wrapper *req, struct packet_wrap
         /* Clear the persistent group with id 0 */
         memset(buffer, 0, sizeof(buffer));
         memset(response, 0, sizeof(response));
-        sprintf(buffer, "REMOVE_NETWORK 0");
+        snprintf(buffer, sizeof(buffer), "REMOVE_NETWORK 0");
         resp_len = sizeof(response) - 1;
         wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
         /* Check response */
@@ -2424,9 +2424,9 @@ static int p2p_start_wps_handler(struct packet_wrapper *req, struct packet_wrapp
     if (tlv) {
         memset(pin_code, 0, sizeof(pin_code));
         memcpy(pin_code, tlv->value, tlv->len);
-        sprintf(buffer, "WPS_PIN any %s", pin_code);
+        snprintf(buffer, sizeof(buffer), "WPS_PIN any %s", pin_code);
     } else {
-        sprintf(buffer, "WPS_PBC");
+        snprintf(buffer, sizeof(buffer), "WPS_PBC");
     }
 
     wpa_s = z_wpas_get_handle_by_ifname(get_wireless_interface());
@@ -2550,12 +2550,12 @@ static int p2p_invite_handler(struct packet_wrapper *req, struct packet_wrapper 
         if (tlv) {
             memset(freq, 0, sizeof(freq));
             memcpy(freq, tlv->value, tlv->len);
-            sprintf(buffer, "P2P_INVITE %s peer=%s%s freq=%s", persist, addr, he, freq);
+            snprintf(buffer, sizeof(buffer), "P2P_INVITE %s peer=%s%s freq=%s", persist, addr, he, freq);
         } else {
-            sprintf(buffer, "P2P_INVITE %s peer=%s%s", persist, addr, he);
+            snprintf(buffer, sizeof(buffer), "P2P_INVITE %s peer=%s%s", persist, addr, he);
         }
     } else {
-        sprintf(buffer, "P2P_INVITE group=%s peer=%s", if_name, addr);
+        snprintf(buffer, sizeof(buffer), "P2P_INVITE group=%s peer=%s", if_name, addr);
     }
     indigo_logger(LOG_LEVEL_DEBUG, "Command: %s", buffer);
     resp_len = sizeof(response) - 1;
@@ -2638,7 +2638,7 @@ static int p2p_connect_handler(struct packet_wrapper *req, struct packet_wrapper
         } else {
             indigo_logger(LOG_LEVEL_ERROR, "Missed TLV PIN_METHOD???");
         }
-        sprintf(buffer, "P2P_CONNECT %s %s %s%s%s%s%s", mac, pin_code, method, type, go_intent, he, persist);
+        snprintf(buffer, sizeof(buffer), "P2P_CONNECT %s %s %s%s%s%s%s", mac, pin_code, method, type, go_intent, he, persist);
     } else {
         tlv = find_wrapper_tlv_by_id(req, TLV_WSC_METHOD);
         if (tlv) {
@@ -2646,7 +2646,7 @@ static int p2p_connect_handler(struct packet_wrapper *req, struct packet_wrapper
         } else {
             indigo_logger(LOG_LEVEL_ERROR, "Missed TLV WSC_METHOD");
         }
-        sprintf(buffer, "P2P_CONNECT %s %s%s%s%s%s", mac, method, type, go_intent, he, persist);
+        snprintf(buffer, sizeof(buffer), "P2P_CONNECT %s %s%s%s%s%s", mac, method, type, go_intent, he, persist);
     }
     indigo_logger(LOG_LEVEL_DEBUG, "Command: %s", buffer);
 
@@ -2709,7 +2709,7 @@ static int sta_scan_handler(struct packet_wrapper *req, struct packet_wrapper *r
     // SCAN
     memset(buffer, 0, sizeof(buffer));
     memset(response, 0, sizeof(response));
-    sprintf(buffer, "SCAN");
+    snprintf(buffer, sizeof(buffer), "SCAN");
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
     /* Check response */
@@ -2749,7 +2749,7 @@ static int send_sta_anqp_query_handler(struct packet_wrapper *req, struct packet
 
     /* It may need to check whether to just scan */
     memset(buffer, 0, sizeof(buffer));
-    len = sprintf(buffer, "ctrl_interface=%s\nap_scan=1\n", WPAS_CTRL_PATH_DEFAULT);
+    len = snprintf(buffer, sizeof(buffer), "ctrl_interface=%s\nap_scan=1\n", WPAS_CTRL_PATH_DEFAULT);
     if (len) {
         write_file(get_wpas_conf_file(), buffer, len);
     }
@@ -2773,7 +2773,7 @@ static int send_sta_anqp_query_handler(struct packet_wrapper *req, struct packet
     // SCAN
     memset(buffer, 0, sizeof(buffer));
     memset(response, 0, sizeof(response));
-    sprintf(buffer, "SCAN");
+    snprintf(buffer, sizeof(buffer), "SCAN");
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
     /* Check response */
@@ -2805,14 +2805,14 @@ static int send_sta_anqp_query_handler(struct packet_wrapper *req, struct packet
         tlv = find_wrapper_tlv_by_id(req, TLV_REALM);
         if (tlv) {
             memcpy(realm, tlv->value, tlv->len);
-            sprintf(buffer, "HS20_GET_NAI_HOME_REALM_LIST %s realm=%s", bssid, realm);
+            snprintf(buffer, sizeof(buffer), "HS20_GET_NAI_HOME_REALM_LIST %s realm=%s", bssid, realm);
         } else {
             goto done;
         }
     } else {
         token = strtok(anqp_info_id, delimit);
         memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, "ANQP_GET %s ", bssid);
+        snprintf(buffer, sizeof(buffer), "ANQP_GET %s ", bssid);
         while(token != NULL) {
             for (i = 0; i < sizeof(anqp_maps)/sizeof(struct anqp_tlv_to_config_name); i++) {
                 if (strcmp(token, anqp_maps[i].element) == 0) {
@@ -2920,7 +2920,7 @@ static int sta_add_credential_handler(struct packet_wrapper *req, struct packet_
         sta_configured = 1;
         /* TODO: Add functionality to stop Supplicant */
 	memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, "ctrl_interface=%s\nap_scan=1\n", WPAS_CTRL_PATH_DEFAULT);
+        snprintf(buffer, sizeof(buffer), "ctrl_interface=%s\nap_scan=1\n", WPAS_CTRL_PATH_DEFAULT);
         len = strlen(buffer);
         if (len) {
             write_file(get_wpas_conf_file(), buffer, len);
@@ -3125,7 +3125,7 @@ static int get_wsc_pin_handler(struct packet_wrapper *req, struct packet_wrapper
     if (role == DUT_TYPE_APUT) {
 #ifdef CONFIG_AP
         // TODO
-        sprintf(buffer, "WPS_AP_PIN get");
+        snprintf(buffer, sizeof(buffer), "WPS_AP_PIN get");
         w = wpa_ctrl_open(get_hapd_ctrl_path());
         if (!w) {
             indigo_logger(LOG_LEVEL_ERROR, "Failed to connect to hostapd");
@@ -3139,7 +3139,7 @@ static int get_wsc_pin_handler(struct packet_wrapper *req, struct packet_wrapper
 #else
     } else if (role == DUT_TYPE_STAUT) {
 #endif /* End Of CONFIG_P2P */
-        sprintf(buffer, "WPS_PIN get");
+        snprintf(buffer, sizeof(buffer), "WPS_PIN get");
         w = wpa_ctrl_open(wpa_s->ctrl_iface->sock_pair[0]);
         if (!w) {
             indigo_logger(LOG_LEVEL_ERROR, "Failed to connect to wpa_supplicant");
@@ -3211,9 +3211,9 @@ static int start_wps_ap_handler(struct packet_wrapper *req, struct packet_wrappe
         /*
          * End of wsc pin validation function
          * */
-        sprintf(buffer, "WPS_PIN any %s", pin_code);
+        snprintf(buffer, sizeof(buffer), "WPS_PIN any %s", pin_code);
     } else {
-        sprintf(buffer, "WPS_PBC");
+        snprintf(buffer, sizeof(buffer), "WPS_PBC");
     }
 
     /* Open hostapd UDS socket */
@@ -3264,10 +3264,10 @@ static int start_wps_sta_handler(struct packet_wrapper *req, struct packet_wrapp
         memset(pin_code, 0, sizeof(pin_code));
         memcpy(pin_code, tlv->value, tlv->len);
         if (strlen(pin_code) == 1 && atoi(pin_code) == 0) {
-            sprintf(buffer, "WPS_PIN any");
+            snprintf(buffer, sizeof(buffer), "WPS_PIN any");
             use_dynamic_pin = 1;
         } else if (strlen(pin_code) == 4 || strlen(pin_code) == 8){
-            sprintf(buffer, "WPS_PIN any %s", pin_code);
+            snprintf(buffer, sizeof(buffer), "WPS_PIN any %s", pin_code);
         } else {
             /* Please implement the function to strip the extraneous
             *  hyphen(dash) attached with 4 or 8-digit PIN code, then
@@ -3277,7 +3277,7 @@ static int start_wps_sta_handler(struct packet_wrapper *req, struct packet_wrapp
             goto done;
         }
     } else {
-        sprintf(buffer, "WPS_PBC");
+        snprintf(buffer, sizeof(buffer), "WPS_PBC");
     }
 
     /* Open wpa_supplicant UDS socket */
@@ -3434,14 +3434,14 @@ static int enable_wsc_sta_handler(struct packet_wrapper *req, struct packet_wrap
 
     /* Generate configuration */
     memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "ctrl_interface=%s\nap_scan=1\npmf=1\n", WPAS_CTRL_PATH_DEFAULT);
+    snprintf(buffer, sizeof(buffer), "ctrl_interface=%s\nap_scan=1\npmf=1\n", WPAS_CTRL_PATH_DEFAULT);
 
     for (i = 0; i < req->tlv_num; i++) {
         cfg = find_wpas_global_config_name(req->tlv[i]->id);
         if (cfg) {
             memset(value, 0, sizeof(value));
             memcpy(value, req->tlv[i]->value, req->tlv[i]->len);
-            sprintf(cfg_item, "%s=%s\n", cfg->config_name, value);
+            snprintf(cfg_item, sizeof(cfg_item), "%s=%s\n", cfg->config_name, value);
             strcat(buffer, cfg_item);
         }
     }
@@ -3458,7 +3458,7 @@ static int enable_wsc_sta_handler(struct packet_wrapper *req, struct packet_wrap
         } else if (atoi(value) == WPS_ENABLE_NORMAL) {
             for (i = 0; i < STA_SETTING_NUM; i++) {
                 memset(cfg_item, 0, sizeof(cfg_item));
-                sprintf(cfg_item, "%s=%s\n", s[i].wkey, s[i].value);
+                snprintf(cfg_item, sizeof(cfg_item), "%s=%s\n", s[i].wkey, s[i].value);
                 strcat(buffer, cfg_item);
             }
             indigo_logger(LOG_LEVEL_INFO, "STAUT Configure WPS");
@@ -3531,10 +3531,10 @@ static int set_p2p_serv_disc_handler(struct packet_wrapper *req, struct packet_w
     memset(buffer, 0, sizeof(buffer));
     memset(response, 0, sizeof(response));
     if (addr[0] != 0) {
-        sprintf(buffer, "P2P_SERV_DISC_REQ %s 02000001", addr);
+        snprintf(buffer, sizeof(buffer), "P2P_SERV_DISC_REQ %s 02000001", addr);
         indigo_logger(LOG_LEVEL_DEBUG, "Command: %s", buffer);
     } else {
-        sprintf(buffer, "P2P_SERVICE_ADD bonjour 096d797072696e746572045f697070c00c001001 09747874766572733d311a70646c3d6170706c69636174696f6e2f706f7374736372797074");
+        snprintf(buffer, sizeof(buffer), "P2P_SERVICE_ADD bonjour 096d797072696e746572045f697070c00c001001 09747874766572733d311a70646c3d6170706c69636174696f6e2f706f7374736372797074");
     }
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
@@ -3544,7 +3544,7 @@ static int set_p2p_serv_disc_handler(struct packet_wrapper *req, struct packet_w
             indigo_logger(LOG_LEVEL_ERROR, "Failed to execute the command. Response: %s", response);
             goto done;
         }
-        sprintf(buffer, "P2P_SERVICE_ADD upnp 10 uuid:5566d33e-9774-09ab-4822-333456785632::urn:schemas-upnp-org:service:ContentDirectory:2");
+        snprintf(buffer, sizeof(buffer), "P2P_SERVICE_ADD upnp 10 uuid:5566d33e-9774-09ab-4822-333456785632::urn:schemas-upnp-org:service:ContentDirectory:2");
         wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
         if (strncmp(response, WPA_CTRL_OK, strlen(WPA_CTRL_OK)) != 0) {
             indigo_logger(LOG_LEVEL_ERROR, "Failed to execute the command. Response: %s", response);
@@ -3585,7 +3585,7 @@ static int set_p2p_ext_listen_handler(struct packet_wrapper *req, struct packet_
     }
     memset(buffer, 0, sizeof(buffer));
     memset(response, 0, sizeof(response));
-    sprintf(buffer, "P2P_EXT_LISTEN 1000 4000");
+    snprintf(buffer, sizeof(buffer), "P2P_EXT_LISTEN 1000 4000");
     resp_len = sizeof(response) - 1;
     wpa_ctrl_request(w, buffer, strlen(buffer), response, &resp_len, NULL);
     /* Check response */
