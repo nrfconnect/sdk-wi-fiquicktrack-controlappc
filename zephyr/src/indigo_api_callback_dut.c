@@ -146,8 +146,8 @@ done:
 
 #define CHECK_RET(ret_value) \
     do { \
-        if (ret_value == -1) { \
-            indigo_logger(LOG_LEVEL_ERROR, "run_qt_command failed"); \
+        if (ret_value < 0) { \
+            indigo_logger(LOG_LEVEL_ERROR, "Error occured"); \
             goto done; \
         } \
     } while(0)
@@ -1493,7 +1493,9 @@ static int set_ap_parameter_handler(struct packet_wrapper *req, struct packet_wr
         tlv = find_wrapper_tlv_by_id(req, TLV_GAS_COMEBACK_DELAY);
     }
     if (tlv && find_tlv_config_name(tlv->id) != NULL) {
-        strcpy(param_name, find_tlv_config_name(tlv->id));
+        if (strncpy(param_name, find_tlv_config_name(tlv->id), sizeof(param_name)) == NULL) {
+	    goto done;
+	}
         memcpy(param_value, tlv->value, sizeof(param_value));
     } else {
         status = TLV_VALUE_STATUS_NOT_OK;
@@ -1803,7 +1805,9 @@ static int set_sta_parameter_handler(struct packet_wrapper *req, struct packet_w
         memset(param_name, 0, sizeof(param_name));
         memset(param_value, 0, sizeof(param_value));
         tlv = req->tlv[i];
-        strcpy(param_name, find_tlv_config_name(tlv->id));
+        if (strncpy(param_name, find_tlv_config_name(tlv->id), sizeof(param_name)) == NULL) {
+	    goto done;
+	}
         memcpy(param_value, tlv->value, sizeof(param_value));
 
         /* Assemble wpa_supplicant command */
