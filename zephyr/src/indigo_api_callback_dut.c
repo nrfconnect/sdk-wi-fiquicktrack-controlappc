@@ -190,7 +190,7 @@ static int reset_device_handler(struct packet_wrapper *req, struct packet_wrappe
     tlv = find_wrapper_tlv_by_id(req, TLV_ROLE);
     memset(role, 0, sizeof(role));
     if (tlv) {
-        memcpy(role, tlv->value, tlv->len);
+        memcpy(role, tlv->value, sizeof(role));
     } else {
         goto done;
     }
@@ -198,13 +198,13 @@ static int reset_device_handler(struct packet_wrapper *req, struct packet_wrappe
     tlv = find_wrapper_tlv_by_id(req, TLV_DEBUG_LEVEL);
     memset(log_level, 0, sizeof(log_level));
     if (tlv) {
-        memcpy(log_level, tlv->value, tlv->len);
+        memcpy(log_level, tlv->value, sizeof(log_level));
     }
     /* TLV: TLV_BAND */
     memset(band, 0, sizeof(band));
     tlv = find_wrapper_tlv_by_id(req, TLV_BAND);
     if (tlv) {
-        memcpy(band, tlv->value, tlv->len);
+        memcpy(band, tlv->value, sizeof(band));
     }
 
     if (atoi(role) == DUT_TYPE_STAUT) {
@@ -263,7 +263,7 @@ static int stop_ap_handler(struct packet_wrapper *req, struct packet_wrapper *re
     tlv = find_wrapper_tlv_by_id(req, TLV_RESET_TYPE);
     memset(reset_type, 0, sizeof(reset_type));
     if (tlv) {
-        memcpy(reset_type, tlv->value, tlv->len);
+        memcpy(reset_type, tlv->value, sizeof(reset_type));
         reset = atoi(reset_type);
         indigo_logger(LOG_LEVEL_DEBUG, "Reset Type: %d", reset);
     }
@@ -366,7 +366,7 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
 
         if (tlv->id == TLV_CHANNEL) {
             memset(value, 0, sizeof(value));
-            memcpy(value, tlv->value, tlv->len);
+            memcpy(value, tlv->value, sizeof(value));
             channel = atoi(value);
             if (is_multiple_bssid) {
                /* channel will be configured on the first wlan */
@@ -394,7 +394,7 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
         if (cfg) {
             char *token = NULL, *delimit = ";";
 
-            memcpy(buffer, tlv->value, tlv->len);
+            memcpy(buffer, tlv->value, sizeof(buffer));
             token = strtok(buffer, delimit);
 
             while(token != NULL) {
@@ -419,7 +419,7 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
         profile = find_tlv_hs2_profile(tlv->id);
         if (profile) {
             char *hs2_config = 0;
-            memcpy(buffer, tlv->value, tlv->len);
+            memcpy(buffer, tlv->value, sizeof(buffer));
 
             if (((tlv->id == TLV_OSU_PROVIDERS_LIST) || (tlv->id == TLV_OPERATOR_ICON_METADATA)) && (!hs20_icons_attached)) {
                 attach_hs20_icons(output);
@@ -448,7 +448,7 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
                 continue;
             }
             enable_wps = 1;
-            memcpy(buffer, tlv->value, tlv->len);
+            memcpy(buffer, tlv->value, sizeof(buffer));
             if (atoi(buffer) == WPS_ENABLE_OOB) {
                 /* WPS OOB: Out-of-Box */
                 for (j = 0; j < AP_SETTING_NUM; j++) {
@@ -523,19 +523,19 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
 
         if (tlv->id == TLV_HW_MODE) {
             memset(band, 0, sizeof(band));
-            memcpy(band, tlv->value, tlv->len);
+            memcpy(band, tlv->value, sizeof(band));
         }
 
         if (tlv->id == TLV_HE_OPER_CHWIDTH) {
             memset(value, 0, sizeof(value));
-            memcpy(value, tlv->value, tlv->len);
+            memcpy(value, tlv->value, sizeof(value));
             chwidth = atoi(value);
             chwidthset = 1;
         }
 
         if (tlv->id == TLV_VHT_OPER_CHWIDTH) {
             memset(value, 0, sizeof(value));
-            memcpy(value, tlv->value, tlv->len);
+            memcpy(value, tlv->value, sizeof(value));
             chwidth = atoi(value);
             vht_chwidthset = 1;
         }
@@ -565,7 +565,7 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
 
         if (tlv->id == TLV_HE_UNSOL_PR_RESP_CADENCE) {
             memset(value, 0, sizeof(value));
-            memcpy(value, tlv->value, tlv->len);
+            memcpy(value, tlv->value, sizeof(value));
             unsol_pr_resp_interval = atoi(value);
         }
 
@@ -580,7 +580,7 @@ static int generate_hostapd_config(char *output, int output_size, struct packet_
             char bss_identifier_str[8];
             memset(&bss_info, 0, sizeof(bss_info));
             memset(bss_identifier_str, 0, sizeof(bss_identifier_str));
-            memcpy(bss_identifier_str, tlv->value, tlv->len);
+            memcpy(bss_identifier_str, tlv->value, sizeof(bss_identifier_str));
             bss_identifier = atoi(bss_identifier_str);
             parse_bss_identifier(bss_identifier, &bss_info);
             wlan = get_wireless_interface_info(bss_info.band, bss_info.identifier);
@@ -765,7 +765,7 @@ static int configure_ap_handler(struct packet_wrapper *req, struct packet_wrappe
     if (tlv) {
         /* Multiple wlans configure must carry TLV_BSS_IDENTIFIER */
         memset(bss_identifier_str, 0, sizeof(bss_identifier_str));
-        memcpy(bss_identifier_str, tlv->value, tlv->len);
+        memcpy(bss_identifier_str, tlv->value, sizeof(bss_identifier_str));
         bss_identifier = atoi(bss_identifier_str);
         parse_bss_identifier(bss_identifier, &bss_info);
         wlan = get_wireless_interface_info(bss_info.band, bss_info.identifier);
@@ -791,7 +791,7 @@ static int configure_ap_handler(struct packet_wrapper *req, struct packet_wrappe
         if (tlv)
         {
             memset(hw_mode_str, 0, sizeof(hw_mode_str));
-            memcpy(hw_mode_str, tlv->value, tlv->len);
+            memcpy(hw_mode_str, tlv->value, sizeof(hw_mode_str));
             if (find_wrapper_tlv_by_id(req, TLV_HE_6G_ONLY)) {
                 band = BAND_6GHZ;
             } else if (!strncmp(hw_mode_str, "a", 1)) {
@@ -914,7 +914,7 @@ static int configure_ap_wsc_handler(struct packet_wrapper *req, struct packet_wr
     if (tlv) {
         /* Multiple wlans configure must carry TLV_BSS_IDENTIFIER */
         memset(bss_identifier_str, 0, sizeof(bss_identifier_str));
-        memcpy(bss_identifier_str, tlv->value, tlv->len);
+        memcpy(bss_identifier_str, tlv->value, sizeof(bss_identifier_str));
         bss_identifier = atoi(bss_identifier_str);
         parse_bss_identifier(bss_identifier, &bss_info);
         wlan = get_wireless_interface_info(bss_info.band, bss_info.identifier);
@@ -943,7 +943,7 @@ static int configure_ap_wsc_handler(struct packet_wrapper *req, struct packet_wr
         if (tlv)
         {
             memset(hw_mode_str, 0, sizeof(hw_mode_str));
-            memcpy(hw_mode_str, tlv->value, tlv->len);
+            memcpy(hw_mode_str, tlv->value, sizeof(hw_mode_str));
             if (find_wrapper_tlv_by_id(req, TLV_HE_6G_ONLY)) {
                 band = BAND_6GHZ;
             } else if (!strncmp(hw_mode_str, "a", 1)) {
@@ -1054,42 +1054,42 @@ static int send_ap_btm_handler(struct packet_wrapper *req, struct packet_wrapper
     /* TLV: BSSID (required) */
     tlv = find_wrapper_tlv_by_id(req, TLV_BSSID);
     if (tlv) {
-        memcpy(bssid, tlv->value, tlv->len);
+        memcpy(bssid, tlv->value, sizeof(bssid));
     }
     /* DISASSOC_IMMINENT            disassoc_imminent=%s */
     tlv = find_wrapper_tlv_by_id(req, TLV_DISASSOC_IMMINENT);
     if (tlv) {
-        memcpy(disassoc_imminent, tlv->value, tlv->len);
+        memcpy(disassoc_imminent, tlv->value, sizeof(disassoc_imminent));
     }
     /* DISASSOC_TIMER               disassoc_timer=%s */
     tlv = find_wrapper_tlv_by_id(req, TLV_DISASSOC_TIMER);
     if (tlv) {
-        memcpy(disassoc_timer, tlv->value, tlv->len);
+        memcpy(disassoc_timer, tlv->value, sizeof(disassoc_timer));
     }
     /* REASSOCIAITION_RETRY_DELAY   mbo=0:{}:0 */
     tlv = find_wrapper_tlv_by_id(req, TLV_REASSOCIAITION_RETRY_DELAY);
     if (tlv) {
-        memcpy(reassoc_retry_delay, tlv->value, tlv->len);
+        memcpy(reassoc_retry_delay, tlv->value, sizeof(reassoc_retry_delay));
     }
     /* CANDIDATE_LIST              pref=1 */
     tlv = find_wrapper_tlv_by_id(req, TLV_CANDIDATE_LIST);
     if (tlv) {
-        memcpy(candidate_list, tlv->value, tlv->len);
+        memcpy(candidate_list, tlv->value, sizeof(candidate_list));
     }
     /* BSS_TERMINATION              bss_term_bit */
     tlv = find_wrapper_tlv_by_id(req, TLV_BSS_TERMINATION);
     if (tlv) {
-        memcpy(bss_term_bit, tlv->value, tlv->len);
+        memcpy(bss_term_bit, tlv->value, sizeof(bss_term_bit));
     }
     /* BSS_TERMINATION_TSF          bss_term_tsf */
     tlv = find_wrapper_tlv_by_id(req, TLV_BSS_TERMINATION_TSF);
     if (tlv) {
-        memcpy(bss_term_tsf, tlv->value, tlv->len);
+        memcpy(bss_term_tsf, tlv->value, sizeof(bss_term_tsf));
     }
     /* BSS_TERMINATION_DURATION     bss_term_duration */
     tlv = find_wrapper_tlv_by_id(req, TLV_BSS_TERMINATION_DURATION);
     if (tlv) {
-        memcpy(bss_term_duration, tlv->value, tlv->len);
+        memcpy(bss_term_duration, tlv->value, sizeof(bss_term_duration));
     }
 
     /* Assemble hostapd command for BSS_TM_REQ */
@@ -1151,7 +1151,7 @@ static int create_bridge_network_handler(struct packet_wrapper *req, struct pack
     memset(static_ip, 0, sizeof(static_ip));
     tlv = find_wrapper_tlv_by_id(req, TLV_STATIC_IP);
     if (tlv) {
-        memcpy(static_ip, tlv->value, tlv->len);
+        memcpy(static_ip, tlv->value, sizeof(static_ip));
     } else {
         message = TLV_VALUE_CREATE_BRIDGE_NOT_OK;
         err = -1;
@@ -1185,7 +1185,7 @@ static int assign_static_ip_handler(struct packet_wrapper *req, struct packet_wr
     memset(buffer, 0, sizeof(buffer));
     tlv = find_wrapper_tlv_by_id(req, TLV_STATIC_IP);
     if (tlv) {
-        memcpy(buffer, tlv->value, tlv->len);
+        memcpy(buffer, tlv->value, sizeof(buffer));
     } else {
         message = "Failed.";
         goto response;
@@ -1251,28 +1251,28 @@ static int get_mac_addr_handler(struct packet_wrapper *req, struct packet_wrappe
         memset(role, 0, sizeof(role));
         tlv = find_wrapper_tlv_by_id(req, TLV_ROLE);
         if (tlv) {
-            memcpy(role, tlv->value, tlv->len);
+            memcpy(role, tlv->value, sizeof(role));
         }
 
         /* TLV: TLV_BAND */
         memset(band, 0, sizeof(band));
         tlv = find_wrapper_tlv_by_id(req, TLV_BAND);
         if (tlv) {
-            memcpy(band, tlv->value, tlv->len);
+            memcpy(band, tlv->value, sizeof(band));
         }
 
         /* TLV: TLV_SSID */
         memset(ssid, 0, sizeof(ssid));
         tlv = find_wrapper_tlv_by_id(req, TLV_SSID);
         if (tlv) {
-            memcpy(ssid, tlv->value, tlv->len);
+            memcpy(ssid, tlv->value, sizeof(ssid));
         }
 
         memset(&bss_info, 0, sizeof(bss_info));
         tlv = find_wrapper_tlv_by_id(req, TLV_BSS_IDENTIFIER);
         if (tlv) {
             memset(bss_identifier_str, 0, sizeof(bss_identifier_str));
-            memcpy(bss_identifier_str, tlv->value, tlv->len);
+            memcpy(bss_identifier_str, tlv->value, sizeof(bss_identifier_str));
             bss_identifier = atoi(bss_identifier_str);
             parse_bss_identifier(bss_identifier, &bss_info);
 
@@ -1455,7 +1455,7 @@ static int send_ap_disconnect_handler(struct packet_wrapper *req, struct packet_
     memset(address, 0, sizeof(address));
     tlv = find_wrapper_tlv_by_id(req, TLV_ADDRESS);
     if (tlv) {
-        memcpy(address, tlv->value, tlv->len);
+        memcpy(address, tlv->value, sizeof(address));
     } else {
         indigo_logger(LOG_LEVEL_ERROR, "Missed TLV:Address");
         status = TLV_VALUE_STATUS_NOT_OK;
@@ -1494,7 +1494,7 @@ static int set_ap_parameter_handler(struct packet_wrapper *req, struct packet_wr
     }
     if (tlv && find_tlv_config_name(tlv->id) != NULL) {
         strcpy(param_name, find_tlv_config_name(tlv->id));
-        memcpy(param_value, tlv->value, tlv->len);
+        memcpy(param_value, tlv->value, sizeof(param_value));
     } else {
         status = TLV_VALUE_STATUS_NOT_OK;
         message = TLV_VALUE_INSUFFICIENT_TLV;
@@ -1532,7 +1532,7 @@ static int trigger_ap_channel_switch(struct packet_wrapper *req, struct packet_w
     /* TLV: TLV_CHANNEL (required) */
     tlv = find_wrapper_tlv_by_id(req, TLV_CHANNEL);
     if (tlv) {
-        memcpy(channel, tlv->value, tlv->len);
+        memcpy(channel, tlv->value, sizeof(channel));
     } else {
         status = TLV_VALUE_STATUS_NOT_OK;
         message = TLV_VALUE_INSUFFICIENT_TLV;
@@ -1542,7 +1542,7 @@ static int trigger_ap_channel_switch(struct packet_wrapper *req, struct packet_w
     /* TLV_FREQUENCY (required) */
     tlv = find_wrapper_tlv_by_id(req, TLV_FREQUENCY);
     if (tlv) {
-        memcpy(frequency, tlv->value, tlv->len);
+        memcpy(frequency, tlv->value, sizeof(frequency));
     } else {
         status = TLV_VALUE_STATUS_NOT_OK;
         message = TLV_VALUE_INSUFFICIENT_TLV;
@@ -1586,7 +1586,7 @@ static int get_ip_addr_handler(struct packet_wrapper *req, struct packet_wrapper
     memset(value, 0, sizeof(value));
     tlv = find_wrapper_tlv_by_id(req, TLV_ROLE);
     if (tlv) {
-            memcpy(value, tlv->value, tlv->len);
+            memcpy(value, tlv->value, sizeof(value));
             role = atoi(value);
     }
 
@@ -1804,7 +1804,7 @@ static int set_sta_parameter_handler(struct packet_wrapper *req, struct packet_w
         memset(param_value, 0, sizeof(param_value));
         tlv = req->tlv[i];
         strcpy(param_name, find_tlv_config_name(tlv->id));
-        memcpy(param_value, tlv->value, tlv->len);
+        memcpy(param_value, tlv->value, sizeof(param_value));
 
         /* Assemble wpa_supplicant command */
         memset(buffer, 0, sizeof(buffer));
@@ -1835,7 +1835,7 @@ static int send_sta_btm_query_handler(struct packet_wrapper *req, struct packet_
     /* TLV: BTMQUERY_REASON_CODE */
     tlv = find_wrapper_tlv_by_id(req, TLV_BTMQUERY_REASON_CODE);
     if (tlv) {
-        memcpy(reason_code, tlv->value, tlv->len);
+        memcpy(reason_code, tlv->value, sizeof(reason_code));
     } else {
         goto done;
     }
@@ -1843,7 +1843,7 @@ static int send_sta_btm_query_handler(struct packet_wrapper *req, struct packet_
     /* TLV: TLV_CANDIDATE_LIST */
     tlv = find_wrapper_tlv_by_id(req, TLV_CANDIDATE_LIST);
     if (tlv) {
-        memcpy(candidate_list, tlv->value, tlv->len);
+        memcpy(candidate_list, tlv->value, sizeof(candidate_list));
     }
 
     memset(buffer, 0, sizeof(buffer));
@@ -1947,7 +1947,7 @@ static int add_p2p_group_handler(struct packet_wrapper *req, struct packet_wrapp
     /* TLV_FREQUENCY (required) */
     tlv = find_wrapper_tlv_by_id(req, TLV_FREQUENCY);
     if (tlv) {
-        memcpy(freq, tlv->value, tlv->len);
+        memcpy(freq, tlv->value, sizeof(freq));
     } else {
         status = TLV_VALUE_STATUS_NOT_OK;
         message = TLV_VALUE_INSUFFICIENT_TLV;
@@ -2079,7 +2079,7 @@ static int p2p_invite_handler(struct packet_wrapper *req, struct packet_wrapper 
     /* TLV_ADDRESS (required) */
     tlv = find_wrapper_tlv_by_id(req, TLV_ADDRESS);
     if (tlv) {
-        memcpy(addr, tlv->value, tlv->len);
+        memcpy(addr, tlv->value, sizeof(addr));
     } else {
         status = TLV_VALUE_STATUS_NOT_OK;
         message = TLV_VALUE_INSUFFICIENT_TLV;
@@ -2151,7 +2151,7 @@ static int p2p_connect_handler(struct packet_wrapper *req, struct packet_wrapper
     memset(persist, 0, sizeof(persist));
     tlv = find_wrapper_tlv_by_id(req, TLV_ADDRESS);
     if (tlv) {
-        memcpy(mac, tlv->value, tlv->len);
+        memcpy(mac, tlv->value, sizeof(mac));
     } else {
         indigo_logger(LOG_LEVEL_ERROR, "Missed TLV: TLV_ADDRESS");
         goto done;
@@ -2159,7 +2159,7 @@ static int p2p_connect_handler(struct packet_wrapper *req, struct packet_wrapper
     tlv = find_wrapper_tlv_by_id(req, TLV_GO_INTENT);
     if (tlv) {
         memset(go_intent, 0, sizeof(go_intent));
-        memcpy(go_intent, tlv->value, tlv->len);
+        memcpy(go_intent, tlv->value, sizeof(go_intent));
         intent_value = atoi(go_intent);
     }
     tlv = find_wrapper_tlv_by_id(req, TLV_P2P_CONN_TYPE);
@@ -2186,10 +2186,10 @@ static int p2p_connect_handler(struct packet_wrapper *req, struct packet_wrapper
     tlv = find_wrapper_tlv_by_id(req, TLV_PIN_CODE);
     if (tlv) {
         memset(pin_code, 0, sizeof(pin_code));
-        memcpy(pin_code, tlv->value, tlv->len);
+        memcpy(pin_code, tlv->value, sizeof(pin_code));
         tlv = find_wrapper_tlv_by_id(req, TLV_PIN_METHOD);
         if (tlv) {
-            memcpy(method, tlv->value, tlv->len);
+            memcpy(method, tlv->value, sizeof(method));
         } else {
             indigo_logger(LOG_LEVEL_ERROR, "Missed TLV PIN_METHOD???");
         }
@@ -2197,7 +2197,7 @@ static int p2p_connect_handler(struct packet_wrapper *req, struct packet_wrapper
     } else {
         tlv = find_wrapper_tlv_by_id(req, TLV_WSC_METHOD);
         if (tlv) {
-            memcpy(method, tlv->value, tlv->len);
+            memcpy(method, tlv->value, sizeof(method));
         } else {
             indigo_logger(LOG_LEVEL_ERROR, "Missed TLV WSC_METHOD");
         }
@@ -2266,7 +2266,7 @@ static int send_sta_anqp_query_handler(struct packet_wrapper *req, struct packet
     tlv = find_wrapper_tlv_by_id(req, TLV_BSSID);
     if (tlv) {
         memset(bssid, 0, sizeof(bssid));
-        memcpy(bssid, tlv->value, tlv->len);
+        memcpy(bssid, tlv->value, sizeof(bssid));
     } else {
         goto done;
     }
@@ -2275,7 +2275,7 @@ static int send_sta_anqp_query_handler(struct packet_wrapper *req, struct packet
     tlv = find_wrapper_tlv_by_id(req, TLV_ANQP_INFO_ID);
     if (tlv) {
         memset(anqp_info_id, 0, sizeof(anqp_info_id));
-        memcpy(anqp_info_id, tlv->value, tlv->len);
+        memcpy(anqp_info_id, tlv->value, sizeof(anqp_info_id));
     }
 
     if (strcmp(anqp_info_id, "NAIHomeRealm") == 0) {
@@ -2386,7 +2386,7 @@ static int sta_add_credential_handler(struct packet_wrapper *req, struct packet_
         if (!cfg) {
             continue;
         }
-        memcpy(param_value, tlv->value, tlv->len);
+        memcpy(param_value, tlv->value, sizeof(param_value));
 
         /* Assemble wpa_supplicant command */
         memset(buffer, 0, sizeof(buffer));
@@ -2431,7 +2431,7 @@ static int start_dhcp_handler(struct packet_wrapper *req, struct packet_wrapper 
     memset(role, 0, sizeof(role));
     tlv = find_wrapper_tlv_by_id(req, TLV_ROLE);
     if (tlv) {
-        memcpy(role, tlv->value, tlv->len);
+        memcpy(role, tlv->value, sizeof(role));
         if (atoi(role) == DUT_TYPE_P2PUT) {
 #ifdef CONFIG_P2P
             get_p2p_group_if(if_name, sizeof(if_name));
@@ -2449,7 +2449,7 @@ static int start_dhcp_handler(struct packet_wrapper *req, struct packet_wrapper 
     memset(ip_addr, 0, sizeof(ip_addr));
     tlv = find_wrapper_tlv_by_id(req, TLV_STATIC_IP);
     if (tlv) { /* DHCP Server */
-        memcpy(ip_addr, tlv->value, tlv->len);
+        memcpy(ip_addr, tlv->value, sizeof(ip_addr));
         if (!strcmp("0.0.0.0", ip_addr)) {
             CHECK_SNPRINTF(ip_addr, sizeof(ip_addr), DHCP_SERVER_IP);
         }
@@ -2482,7 +2482,7 @@ static int stop_dhcp_handler(struct packet_wrapper *req, struct packet_wrapper *
     memset(role, 0, sizeof(role));
     tlv = find_wrapper_tlv_by_id(req, TLV_ROLE);
     if (tlv) {
-        memcpy(role, tlv->value, tlv->len);
+        memcpy(role, tlv->value, sizeof(role));
         if (atoi(role) == DUT_TYPE_P2PUT) {
 #ifdef CONFIG_P2P
             if (!get_p2p_group_if(if_name, sizeof(if_name)))
@@ -2527,7 +2527,7 @@ static int get_wsc_pin_handler(struct packet_wrapper *req, struct packet_wrapper
     memset(value, 0, sizeof(value));
     tlv = find_wrapper_tlv_by_id(req, TLV_ROLE);
     if (tlv) {
-            memcpy(value, tlv->value, tlv->len);
+            memcpy(value, tlv->value, sizeof(value));
             role = atoi(value);
     } else {
         indigo_logger(LOG_LEVEL_ERROR, "Missed TLV: TLV_ROLE");
@@ -2576,7 +2576,7 @@ static int start_wps_ap_handler(struct packet_wrapper *req, struct packet_wrappe
     tlv = find_wrapper_tlv_by_id(req, TLV_PIN_CODE);
     if (tlv) {
         memset(pin_code, 0, sizeof(pin_code));
-        memcpy(pin_code, tlv->value, tlv->len);
+        memcpy(pin_code, tlv->value, sizeof(pin_code));
 
         /* Please implement the wsc pin validation function to
          * identify the invalid PIN code and DONOT start wps.
@@ -2628,7 +2628,7 @@ static int start_wps_sta_handler(struct packet_wrapper *req, struct packet_wrapp
     tlv = find_wrapper_tlv_by_id(req, TLV_PIN_CODE);
     if (tlv) {
         memset(pin_code, 0, sizeof(pin_code));
-        memcpy(pin_code, tlv->value, tlv->len);
+        memcpy(pin_code, tlv->value, sizeof(pin_code));
         if (strlen(pin_code) == 1 && atoi(pin_code) == 0) {
             RUN_QT_COMMAND("WPS_PIN any", ret);
             use_dynamic_pin = 1;
@@ -2680,7 +2680,7 @@ static int get_wsc_cred_handler(struct packet_wrapper *req, struct packet_wrappe
     memset(value, 0, sizeof(value));
     tlv = find_wrapper_tlv_by_id(req, TLV_ROLE);
     if (tlv) {
-            memcpy(value, tlv->value, tlv->len);
+            memcpy(value, tlv->value, sizeof(value));
             role = atoi(value);
     } else {
         indigo_logger(LOG_LEVEL_ERROR, "Missed TLV: TLV_ROLE");
@@ -2795,7 +2795,7 @@ static int enable_wsc_sta_handler(struct packet_wrapper *req, struct packet_wrap
     tlv = find_wrapper_tlv_by_id(req, TLV_WPS_ENABLE);
     if (tlv) {
         memset(value, 0, sizeof(value));
-        memcpy(value, tlv->value, tlv->len);
+        memcpy(value, tlv->value, sizeof(value));
         /* To get STA wps vendor info */
         wps_setting *s = get_vendor_wps_settings(WPS_STA);
         if (!s) {
@@ -2845,7 +2845,7 @@ static int set_p2p_serv_disc_handler(struct packet_wrapper *req, struct packet_w
     tlv = find_wrapper_tlv_by_id(req, TLV_ADDRESS);
     if (tlv) {
         /* Send Service Discovery Req */
-        memcpy(addr, tlv->value, tlv->len);
+        memcpy(addr, tlv->value, sizeof(addr));
     } else {
         /* Set Services case */
         /* Add bonjour and upnp Service */
