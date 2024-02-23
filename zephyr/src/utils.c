@@ -893,9 +893,9 @@ int set_hapd_exec_file(char* path) {
     char *ptr = indigo_strrstr(path, "/");
 
     if (ptr) {
-        strcpy(hapd_exec_file, ptr+1);
+        strncpy(hapd_exec_file, ptr+1, sizeof(hapd_exec_file));
     } else {
-        strcpy(hapd_exec_file, path);
+        strncpy(hapd_exec_file, path, sizeof(hapd_exec_file));
     }
     return 0;
 }
@@ -978,9 +978,9 @@ char* get_wpas_exec_file() {
 int set_wpas_exec_file(char* path) {
     char *ptr = indigo_strrstr(path, "/");
     if (ptr) {
-        strcpy(wpas_exec_file, ptr+1);
+        strncpy(wpas_exec_file, ptr+1, sizeof(wpas_exec_file));
     } else {
-        strcpy(wpas_exec_file, path);
+        strncpy(wpas_exec_file, path, sizeof(wpas_exec_file));
     }
     return 0;
 }
@@ -1052,7 +1052,7 @@ int add_wireless_interface_info(int band, int bssid, char *name) {
     interfaces[interface_count].band = band;
     interfaces[interface_count].bssid = -1;
     interfaces[interface_count].identifier = UNUSED_IDENTIFIER;
-    strcpy(interfaces[interface_count++].ifname, name);
+    strncpy(interfaces[interface_count++].ifname, name, sizeof(interfaces[interface_count].ifname));
     return 0;
 }
 
