@@ -10,13 +10,19 @@ module-help = Sets log level for WFA Quick Track
 source "subsys/logging/Kconfig.template.log_config"
 
 config WFA_QT_CONTROL_APP
-	# Need full POSIX from libc, Zephyr's POSIX support is only partial
-	depends on !POSIX_API
-	select PTHREAD_IPC
-	bool "WFA Quicktrack control app"
+  # Need full POSIX from libc, Zephyr's POSIX support is only partial
+  depends on !POSIX_API
+  select PTHREAD_IPC
+  bool "WFA Quicktrack control app"
 
 config WFA_QT_THREAD_STACK_SIZE
-        int "WFA QT thread stack size"
-        default 4096
-        help
-          Set the stack size for WFA QT thread.
+  int "WFA QT thread stack size"
+  default 4096
+  help
+    Set the stack size for WFA QT thread.
+
+config WPAS_READY_TIMEOUT_MS
+  int "WPA supplicant ready timeout (ms)"
+  default 10000
+  help
+    Set the timeout for WPA supplicant to be ready.
