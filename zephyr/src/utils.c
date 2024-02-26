@@ -35,6 +35,7 @@ typedef uint32_t u_int32_t;
 #include "vendor_specific.h"
 #include "utils.h"
 #include "eloop.h"
+#include "common.h"
 
 #include <zephyr/net/wifi.h>
 
@@ -441,7 +442,7 @@ int send_udp_data(char *target_ip, int target_port, int packet_count, int packet
     s = socket(PF_INET, SOCK_DGRAM, 0);
     if (s < 0) {
         indigo_logger(LOG_LEVEL_ERROR, "Failed to open socket");
-        return -1;
+        goto done;
     }
 
     if (rate < 1) {
@@ -452,17 +453,17 @@ int send_udp_data(char *target_ip, int target_port, int packet_count, int packet
         timeout.tv_usec = 0;
     }
     if (is_bridge_created()) {
-        snprintf(ifname, sizeof(ifname), "%s", get_wlans_bridge());
+        CHECK_SNPRINTF(ifname, sizeof(ifname), "%s", get_wlans_bridge());
 #ifdef CONFIG_P2P
     } else if (get_p2p_group_if(ifname, sizeof(ifname)) != 0)
-        snprintf(ifname, sizeof(ifname), "%s", get_wireless_interface());
+        CHECK_SNPRINTF(ifname, sizeof(ifname), "%s", get_wireless_interface());
 #else
     }
 #endif /* End Of CONFIG_P2P */
     const int len = strlen(ifname);
     if (setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, ifname, len) < 0) {
         indigo_logger(LOG_LEVEL_ERROR, "failed to bind the interface %s", ifname);
-        return -1;
+        goto done;
     }
 
     setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, (const char *)&timeout, sizeof(timeout));
@@ -478,7 +479,7 @@ int send_udp_data(char *target_ip, int target_port, int packet_count, int packet
     if (connect(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         indigo_logger(LOG_LEVEL_ERROR, "Connect failed. Error");
         close(s);
-        return -1;
+        goto done;
     }
 
     indigo_logger(LOG_LEVEL_INFO, "packet_count %d rate %lf\n",
@@ -530,6 +531,9 @@ int send_udp_data(char *target_ip, int target_port, int packet_count, int packet
     close(s);
 
     return pkt_rcv;
+
+done:
+    return -1;
 }
 
 int send_icmp_data(char *target_ip, int packet_count, int packet_size, double rate)
@@ -547,7 +551,7 @@ int send_icmp_data(char *target_ip, int packet_count, int packet_size, double ra
 
 	sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (sock < 0) {
-        return -1;
+            goto done;
 	}
 
     memset(&addr, 0, sizeof(addr));
@@ -563,17 +567,17 @@ int send_icmp_data(char *target_ip, int packet_count, int packet_size, double ra
     }
 
     if (is_bridge_created()) {
-        snprintf(ifname, sizeof(ifname), "%s", get_wlans_bridge());
+        CHECK_SNPRINTF(ifname, sizeof(ifname), "%s", get_wlans_bridge());
 #ifdef CONFIG_P2P
     } else if (get_p2p_group_if(ifname, sizeof(ifname)) != 0)
-        snprintf(ifname, sizeof(ifname), "%s", get_wireless_interface());
+        CHECK_SNPRINTF(ifname, sizeof(ifname), "%s", get_wireless_interface());
 #else
     }
 #endif /* End Of CONFIG_P2P */
     const int len = strlen(ifname);
     if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, ifname, len) < 0) {
         indigo_logger(LOG_LEVEL_ERROR, "failed to bind the interface %s", ifname);
-        return -1;
+        goto done;
     }
     indigo_logger(LOG_LEVEL_DEBUG, "Bind the interface %s", ifname);
 
@@ -587,7 +591,7 @@ int send_icmp_data(char *target_ip, int packet_count, int packet_size, double ra
         loopback.pkt_type = DATA_TYPE_ICMP;
         loopback.rate = rate;
         loopback.pkt_size = packet_size;
-        snprintf(loopback.target_ip, sizeof(loopback.target_ip), "%s", target_ip);
+        CHECK_SNPRINTF(loopback.target_ip, sizeof(loopback.target_ip), "%s", target_ip);
         for (i = sizeof(struct net_icmp_hdr); (i < packet_size) && (i < sizeof(loopback.message)); i++)
             loopback.message[i] = 0x0A;
         qt_eloop_register_timeout(0, 0, send_continuous_loopback_packet, &loopback, NULL);
@@ -636,6 +640,9 @@ int send_icmp_data(char *target_ip, int packet_count, int packet_size, double ra
 
     close(sock);
     return pkt_rcv;
+
+done:
+    return -1;
 }
 
 int send_broadcast_arp(char *target_ip, int *send_count, int rate) {
@@ -716,10 +723,13 @@ char* get_wlans_bridge() {
 }
 int set_wlans_bridge(char* br) {
     memset(wlans_bridge, 0, sizeof(wlans_bridge));
-    snprintf(wlans_bridge, sizeof(wlans_bridge), "%s", br);
+    CHECK_SNPRINTF(wlans_bridge, sizeof(wlans_bridge), "%s", br);
     printf("\nwlans_bridge = %s.\n", wlans_bridge);
 
     return 0;
+
+done:
+    return -1;
 }
 
 int is_bridge_created() {
@@ -839,12 +849,13 @@ struct interface_info* assign_wireless_interface_info(struct bss_identifier_info
             interfaces[i].hapd_bss_id = band_mbssid_cnt[bss->band];
             band_mbssid_cnt[bss->band]++;
             memset(interfaces[i].hapd_conf_file, 0, sizeof(interfaces[i].hapd_conf_file));
-            snprintf(interfaces[i].hapd_conf_file, sizeof(interfaces[i].hapd_conf_file),
+            CHECK_SNPRINTF(interfaces[i].hapd_conf_file, sizeof(interfaces[i].hapd_conf_file),
                      "%s/hostapd_%s.conf", HAPD_CONF_FILE_DEFAULT_PATH, ifname);
             return &interfaces[i];
         }
     }
 
+done:
     return NULL;
 }
 
@@ -890,12 +901,17 @@ char* get_hapd_exec_file() {
 
 /* parse hostapd full path and set hostapd's file name */
 int set_hapd_exec_file(char* path) {
+    char *ret = NULL;
     char *ptr = indigo_strrstr(path, "/");
 
     if (ptr) {
-        strcpy(hapd_exec_file, ptr+1);
+        ret = strncpy(hapd_exec_file, ptr+1, sizeof(hapd_exec_file));
     } else {
-        strcpy(hapd_exec_file, path);
+        ret = strncpy(hapd_exec_file, path, sizeof(hapd_exec_file));
+    }
+
+    if (!ret) {
+	    return -1;
     }
     return 0;
 }
@@ -908,34 +924,47 @@ char* get_hapd_full_exec_path() {
 /* set hostapd's full path */
 int set_hapd_full_exec_path(char* path) {
     memset(hapd_full_exec_path, 0, sizeof(hapd_full_exec_path));
-    snprintf(hapd_full_exec_path, sizeof(hapd_full_exec_path), "%s", path);
+    CHECK_SNPRINTF(hapd_full_exec_path, sizeof(hapd_full_exec_path), "%s", path);
 
     set_hapd_exec_file(hapd_full_exec_path);
     return 0;
+
+done:
+    return -1;
 }
 
 char* get_hapd_ctrl_path_by_id(struct interface_info* wlan) {
     memset(hapd_full_ctrl_path, 0, sizeof(hapd_full_ctrl_path));
     if (wlan) {
-        sprintf(hapd_full_ctrl_path, "%s/%s", hapd_ctrl_path, wlan->ifname);
+        CHECK_SNPRINTF(hapd_full_ctrl_path, sizeof(hapd_full_ctrl_path), "%s/%s", hapd_ctrl_path, wlan->ifname);
     }
     else {
-        sprintf(hapd_full_ctrl_path, "%s/%s", hapd_ctrl_path, get_default_wireless_interface_info());
+        CHECK_SNPRINTF(hapd_full_ctrl_path, sizeof(hapd_full_ctrl_path), "%s/%s", hapd_ctrl_path, get_default_wireless_interface_info());
     }
+
     printf("hapd_full_ctrl_path: %s, wlan %p\n", hapd_full_ctrl_path, wlan);
     return hapd_full_ctrl_path;
+
+done:
+    return NULL;
 }
 
 char* get_hapd_ctrl_path() {
     memset(hapd_full_ctrl_path, 0, sizeof(hapd_full_ctrl_path));
-    sprintf(hapd_full_ctrl_path, "%s/%s", hapd_ctrl_path, get_default_wireless_interface_info());
+    CHECK_SNPRINTF(hapd_full_ctrl_path, sizeof(hapd_full_ctrl_path), "%s/%s", hapd_ctrl_path, get_default_wireless_interface_info());
     return hapd_full_ctrl_path;
+
+done:
+    return NULL;
 }
 
 int set_hapd_ctrl_path(char* path) {
     memset(hapd_ctrl_path, 0, sizeof(hapd_ctrl_path));
-    snprintf(hapd_ctrl_path, sizeof(hapd_ctrl_path), "%s", path);
+    CHECK_SNPRINTF(hapd_ctrl_path, sizeof(hapd_ctrl_path), "%s", path);
     return 0;
+
+done:
+    return -1;
 }
 
 char* get_hapd_global_ctrl_path() {
@@ -944,8 +973,11 @@ char* get_hapd_global_ctrl_path() {
 
 int set_hapd_global_ctrl_path(char* path) {
     memset(hapd_global_ctrl_path, 0, sizeof(hapd_global_ctrl_path));
-    snprintf(hapd_global_ctrl_path, sizeof(hapd_global_ctrl_path), "%s", path);
+    CHECK_SNPRINTF(hapd_global_ctrl_path, sizeof(hapd_global_ctrl_path), "%s", path);
     return 0;
+
+done:
+    return -1;
 }
 
 char* get_hapd_conf_file() {
@@ -954,8 +986,11 @@ char* get_hapd_conf_file() {
 
 int set_hapd_conf_file(char* path) {
     memset(hapd_conf_file, 0, sizeof(hapd_conf_file));
-    snprintf(hapd_conf_file, sizeof(hapd_conf_file), "%s", path);
+    CHECK_SNPRINTF(hapd_conf_file, sizeof(hapd_conf_file), "%s", path);
     return 0;
+
+done:
+    return -1;
 }
 
 void set_hostapd_debug_level(int level) {
@@ -976,11 +1011,16 @@ char* get_wpas_exec_file() {
 }
 
 int set_wpas_exec_file(char* path) {
+    char *ret = NULL;
     char *ptr = indigo_strrstr(path, "/");
     if (ptr) {
-        strcpy(wpas_exec_file, ptr+1);
+        ret = strncpy(wpas_exec_file, ptr+1, sizeof(wpas_exec_file));
     } else {
-        strcpy(wpas_exec_file, path);
+        ret = strncpy(wpas_exec_file, path, sizeof(wpas_exec_file));
+    }
+
+    if (!ret) {
+	    return -1;
     }
     return 0;
 }
@@ -991,26 +1031,38 @@ char* get_wpas_full_exec_path() {
 
 int set_wpas_full_exec_path(char* path) {
     memset(wpas_full_exec_path, 0, sizeof(wpas_full_exec_path));
-    snprintf(wpas_full_exec_path, sizeof(wpas_full_exec_path), "%s", path);
-
+    CHECK_SNPRINTF(wpas_full_exec_path, sizeof(wpas_full_exec_path), "%s", path);
     set_wpas_exec_file(wpas_full_exec_path);
     return 0;
+
+done:
+    return -1;
 }
 
 char* get_wpas_ctrl_path() {
     memset(wpas_full_ctrl_path, 0, sizeof(wpas_full_ctrl_path));
-    sprintf(wpas_full_ctrl_path, "%s/%s", wpas_ctrl_path, get_default_wireless_interface_info());
+    CHECK_SNPRINTF(wpas_full_ctrl_path, sizeof(wpas_full_ctrl_path), "%s/%s", wpas_ctrl_path, get_default_wireless_interface_info());
     return wpas_full_ctrl_path;
+
+done:
+    return NULL;
 }
 
 char* get_wpas_if_ctrl_path(char* if_name) {
     memset(wpas_full_ctrl_path, 0, sizeof(wpas_full_ctrl_path));
-    sprintf(wpas_full_ctrl_path, "%s/%s", wpas_ctrl_path, if_name);
+    CHECK_SNPRINTF(wpas_full_ctrl_path, sizeof(wpas_full_ctrl_path), "%s/%s", wpas_ctrl_path, if_name);
     return wpas_full_ctrl_path;
+
+done:
+    return NULL;
 }
+
 int set_wpas_ctrl_path(char* path) {
-    snprintf(wpas_ctrl_path, sizeof(wpas_ctrl_path), "%s", path);
+    CHECK_SNPRINTF(wpas_ctrl_path, sizeof(wpas_ctrl_path), "%s", path);
     return 0;
+
+done:
+    return -1;
 }
 
 char* get_wpas_global_ctrl_path() {
@@ -1018,8 +1070,11 @@ char* get_wpas_global_ctrl_path() {
 }
 
 int set_wpas_global_ctrl_path(char* path) {
-    snprintf(wpas_global_ctrl_path, sizeof(wpas_global_ctrl_path), "%s", path);
+    CHECK_SNPRINTF(wpas_global_ctrl_path, sizeof(wpas_global_ctrl_path), "%s", path);
     return 0;
+
+done:
+    return -1;
 }
 
 char* get_wpas_conf_file() {
@@ -1028,8 +1083,11 @@ char* get_wpas_conf_file() {
 
 int set_wpas_conf_file(char* path) {
     memset(wpas_conf_file, 0, sizeof(wpas_conf_file));
-    snprintf(wpas_conf_file, sizeof(wpas_conf_file), "%s", path);
+    CHECK_SNPRINTF(wpas_conf_file, sizeof(wpas_conf_file), "%s", path);
     return 0;
+
+done:
+    return -1;
 }
 
 void set_wpas_debug_level(int level) {
@@ -1052,7 +1110,9 @@ int add_wireless_interface_info(int band, int bssid, char *name) {
     interfaces[interface_count].band = band;
     interfaces[interface_count].bssid = -1;
     interfaces[interface_count].identifier = UNUSED_IDENTIFIER;
-    strcpy(interfaces[interface_count++].ifname, name);
+    if (strncpy(interfaces[interface_count++].ifname, name, sizeof(interfaces[interface_count].ifname)) == NULL) {
+	    return -1;
+    }
     return 0;
 }
 
@@ -1328,32 +1388,38 @@ int get_key_value(char *value, char *buffer, char *token) {
     char _token[S_BUFFER_LEN];
 
     if (!value || !buffer || !token) {
-        return -1;
+        goto done;
     }
 
     memset(_token, 0, sizeof(_token));
-    sprintf(_token, "\n%s=", token);
+    CHECK_SNPRINTF(_token, sizeof(_token), "\n%s=", token);
+    
     ptr = strstr(buffer, _token);
     if (!ptr) {
-        sprintf(_token, "%s=", token);
+        CHECK_SNPRINTF(_token, sizeof(_token), "%s=", token);
         if (strncmp(buffer, _token, strlen(_token)) == 0) {
             ptr = buffer;
         }
     }
 
     if (!ptr) {
-        return -1;
+        goto done;
     }
 
     ptr += strlen(_token);
     endptr = strstr(ptr, "\n");
     if (endptr) {
-        strncpy(value, ptr, endptr - ptr);
+        if (strncpy(value, ptr, endptr - ptr) == NULL) {
+		return -1;
+	}
     } else {
         strcpy(value, ptr);
     }
 
     return 0;
+
+done:
+    return -1;
 }
 
 void get_server_cert_hash(char *pem_file, char *buffer) {
