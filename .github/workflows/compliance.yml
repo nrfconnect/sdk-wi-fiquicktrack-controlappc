@@ -23,6 +23,7 @@ jobs:
     - name: Install python dependencies
       working-directory: wfa_qt_app
       run: |
+        pip3 install -U west
         pip3 install -U pip
         pip3 install -U setuptools
         pip3 install -U wheel
@@ -73,6 +74,7 @@ jobs:
         -e checkpatch  \
         -e Kconfig \
         -e KconfigBasicNoModules \
+        -e ModulesMaintainers \
         -e DevicetreeBindings \
         -c origin/${BASE_REF}..
 
