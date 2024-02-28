@@ -107,7 +107,7 @@ static void control_receive_message(int sock, void *eloop_ctx, void *sock_ctx) {
         sendto(sock, (const char *)buffer, len, MSG_CONFIRM, (const struct sockaddr *) &from, fromlen);
 #ifdef CONFIG_ZEPHYR
         if(!strcmp(api->name, "DEVICE_RESET")) {
-		k_msleep(500);
+		k_msleep(CONFIG_WFA_QT_REBOOT_TIMEOUT);
 		shell_execute_cmd(NULL, "kernel reboot cold");
 	}
 #endif
