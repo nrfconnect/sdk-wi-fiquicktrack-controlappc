@@ -322,15 +322,31 @@ void fill_wrapper_ack(struct packet_wrapper *wrapper, int seq, int status, char 
 
     wrapper->tlv_num =  2;
     wrapper->tlv[0] = malloc(sizeof(struct tlv_hdr));
+    if (!wrapper->tlv[0]) {
+        indigo_logger(LOG_LEVEL_ERROR, "%d: Failed to allocate memory for TLV (size: %zu)", __LINE__, sizeof(struct tlv_hdr));
+        return;
+    }
     wrapper->tlv[0]->id = TLV_STATUS;
     wrapper->tlv[0]->len = 1;
     wrapper->tlv[0]->value = (char*)malloc(wrapper->tlv[0]->len);
+    if (!wrapper->tlv[0]->value) {
+        indigo_logger(LOG_LEVEL_ERROR, "%d: Failed to allocate memory for TLV value (size: %d)", __LINE__, wrapper->tlv[0]->len);
+        return;
+    }
     wrapper->tlv[0]->value[0] = status;
 
     wrapper->tlv[1] = malloc(sizeof(struct tlv_hdr));
+    if (!wrapper->tlv[1]) {
+        indigo_logger(LOG_LEVEL_ERROR, "%d: Failed to allocate memory for TLV (size: %zu)", __LINE__, sizeof(struct tlv_hdr));
+        return;
+    }
     wrapper->tlv[1]->id = TLV_MESSAGE;
     wrapper->tlv[1]->len = strlen(reason);
     wrapper->tlv[1]->value = (char*)malloc(wrapper->tlv[1]->len);
+    if (!wrapper->tlv[1]->value) {
+        indigo_logger(LOG_LEVEL_ERROR, "%d: Failed to allocate memory for TLV value (size: %d)", __LINE__, wrapper->tlv[1]->len);
+        return;
+    }
     memcpy(wrapper->tlv[1]->value, reason, wrapper->tlv[1]->len);
 }
 
@@ -359,9 +375,17 @@ void fill_wrapper_message_hdr(struct packet_wrapper *wrapper, int msg_type, int 
 /* Fill the TLV structure to the wrapper (for one byte value) */
 void fill_wrapper_tlv_byte(struct packet_wrapper *wrapper, int id, char value) {
     wrapper->tlv[wrapper->tlv_num] = malloc(sizeof(struct tlv_hdr));
+    if (!wrapper->tlv[wrapper->tlv_num]) {
+        indigo_logger(LOG_LEVEL_ERROR, "%d: Failed to allocate memory for TLV (size: %zu)", __LINE__, sizeof(struct tlv_hdr));
+        return;
+    }
     wrapper->tlv[wrapper->tlv_num]->id = id;
     wrapper->tlv[wrapper->tlv_num]->len = 1;
     wrapper->tlv[wrapper->tlv_num]->value = (char*)malloc(1);
+    if (!wrapper->tlv[wrapper->tlv_num]->value) {
+        indigo_logger(LOG_LEVEL_ERROR, "%d: Failed to allocate memory for TLV value (size: %d)", __LINE__, 1);
+        return;
+    }
     wrapper->tlv[wrapper->tlv_num]->value[0] = value;
     wrapper->tlv_num++;
 }
@@ -369,9 +393,17 @@ void fill_wrapper_tlv_byte(struct packet_wrapper *wrapper, int id, char value) {
 /* Fill the TLV structure to the wrapper (for multiple bytes value) */
 void fill_wrapper_tlv_bytes(struct packet_wrapper *wrapper, int id, int len, char* value) {
     wrapper->tlv[wrapper->tlv_num] = malloc(sizeof(struct tlv_hdr));
+    if (!wrapper->tlv[wrapper->tlv_num]) {
+        indigo_logger(LOG_LEVEL_ERROR, "%d: Failed to allocate memory for TLV", __LINE__);
+        return;
+    }
     wrapper->tlv[wrapper->tlv_num]->id = id;
     wrapper->tlv[wrapper->tlv_num]->len = len;
     wrapper->tlv[wrapper->tlv_num]->value = (char*)malloc(len);
+    if (!wrapper->tlv[wrapper->tlv_num]->value) {
+        indigo_logger(LOG_LEVEL_ERROR, "%d: Failed to allocate memory for TLV value", __LINE__);
+        return;
+    }
     memcpy(wrapper->tlv[wrapper->tlv_num]->value, value, len);
     wrapper->tlv_num++;
 }

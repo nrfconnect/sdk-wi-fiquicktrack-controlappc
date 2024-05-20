@@ -50,6 +50,10 @@ int parse_packet(struct packet_wrapper *req, char *packet, size_t packet_len) {
     /* Parse the TLVs */
     while (packet_len - parser > 0) {
         req->tlv[req->tlv_num] = (struct tlv_hdr *)malloc(sizeof(struct tlv_hdr));
+        if (!req->tlv[req->tlv_num]) {
+            indigo_logger(LOG_LEVEL_ERROR, "%d: Failed to allocate memory for TLV; %d" , __LINE__, req->tlv_num);
+            return -1;
+        }
         memset(req->tlv[req->tlv_num], 0, sizeof(struct tlv_hdr));
 
         ret = parse_tlv(req->tlv[req->tlv_num], packet + parser, packet_len - parser);
@@ -212,6 +216,10 @@ int add_tlv(struct tlv_hdr *tlv, int id, size_t len, char *value) {
     tlv->id = id;
     tlv->len = len;
     tlv->value = (char*)malloc(sizeof(char)*len);
+    if (!tlv->value) {
+        indigo_logger(LOG_LEVEL_ERROR, "Failed to allocate memory for TLV value: %d", tlv->len);
+        return 1;
+    }
     memcpy(tlv->value, value, len);
     return 0;
 }
@@ -225,6 +233,10 @@ int parse_tlv(struct tlv_hdr *tlv, char *packet, size_t packet_len) {
     tlv->id = ((packet[0] & 0x00ff) << 8) | (packet[1] & 0x00ff);
     tlv->len = packet[2];
     tlv->value = (char*)malloc(sizeof(char) * tlv->len);
+    if (!tlv->value) {
+        indigo_logger(LOG_LEVEL_ERROR, "Failed to allocate memory for TLV value: %d", tlv->len);
+        return -1;
+    }
     memcpy(tlv->value, &packet[3], tlv->len);
     tlv->value[tlv->len] = '\0';
 
