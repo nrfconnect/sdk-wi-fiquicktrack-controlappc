@@ -232,7 +232,7 @@ int parse_tlv(struct tlv_hdr *tlv, char *packet, size_t packet_len) {
 
     tlv->id = ((packet[0] & 0x00ff) << 8) | (packet[1] & 0x00ff);
     tlv->len = packet[2];
-    tlv->value = (char*)malloc(sizeof(char) * tlv->len);
+    tlv->value = (char*)malloc((sizeof(char) * tlv->len) + 1);
     if (!tlv->value) {
         indigo_logger(LOG_LEVEL_ERROR, "Failed to allocate memory for TLV value: %d", tlv->len);
         return -1;
