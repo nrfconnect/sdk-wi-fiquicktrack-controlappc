@@ -22,6 +22,9 @@
 #include <signal.h>
 #ifdef CONFIG_ZEPHYR
 #include <zephyr/posix/sys/select.h>
+#include <zephyr/posix/signal.h>
+#define signal(a, b) (void)(b)
+#define alarm(a) (void)(a)
 #else
 #include "sys/select.h"
 #endif
