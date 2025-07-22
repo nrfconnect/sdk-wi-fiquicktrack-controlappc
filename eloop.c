@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
-#ifdef CONFIG_ZEPHYR
+#ifdef __ZEPHYR__
 #include <zephyr/posix/sys/select.h>
 #include <zephyr/posix/signal.h>
 #define signal(a, b) (void)(b)
@@ -33,7 +33,7 @@
 #include "common.h"
 #endif /* CONFIG_NATIVE_WINDOWS */
 
-#ifdef CONFIG_ZEPHYR
+#ifdef __ZEPHYR__
 /* Convenience macros for operations on timevals.
    NOTE: `timercmp' does not work for >= or <=.  */
 # define timerisset(tvp)        ((tvp)->tv_sec || (tvp)->tv_usec)
@@ -290,9 +290,9 @@ static void eloop_process_pending_signals(void)
 	eloop.signaled = 0;
 
 	if (eloop.pending_terminate) {
-#if !defined(CONFIG_NATIVE_WINDOWS) && !defined(CONFIG_ZEPHYR)
+#if !defined(CONFIG_NATIVE_WINDOWS) && !defined(__ZEPHYR__)
 		alarm(0);
-#endif /* CONFIG_NATIVE_WINDOWS && CONFIG_ZEPHYR */
+#endif /* CONFIG_NATIVE_WINDOWS && __ZEPHYR__ */
 		eloop.pending_terminate = 0;
 	}
 
