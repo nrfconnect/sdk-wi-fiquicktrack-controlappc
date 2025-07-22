@@ -8,7 +8,7 @@ jobs:
     name: Build wfa_qt_app
     steps:
     - name: Checkout the code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: wfa_qt_app
         ref: ${{ github.event.pull_request.head.sha }}
