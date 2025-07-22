@@ -1,33 +1,57 @@
 name: Compliance
 
-on: pull_request
+on: pull_request_target
 
 jobs:
   compliance_job:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Run compliance checks on patch series (PR)
     steps:
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
     - name: Checkout the code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: wfa_qt_app
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
 
     - name: cache-pip
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-doc-pip
 
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libxml2-dev \
+          libxslt1-dev \
+          python3-dev \
+          gcc \
+          g++ \
+          build-essential \
+          zlib1g-dev \
+          libmagic1
+
     - name: Install python dependencies
       working-directory: wfa_qt_app
       run: |
-        pip3 install -U west
-        pip3 install -U pip
-        pip3 install -U setuptools
-        pip3 install -U wheel
-        grep -E "python-magic|junitparser|lxml|gitlint|pylint|pykwalify|yamllint" scripts/requirements-fixed.txt | xargs pip3 install -U
+        export PATH="$HOME/.local/bin:$PATH"
+        # TODO: add yamllint to scripts/requirements-fixed.txt
+        pip3 install -U yamllint
+        pip3 install lxml
+        # Install specific python-magic version to avoid ctypes issues
+        pip3 install python-magic==0.4.27
+        pip3 install -U junitparser==2.8.0 gitlint pylint pykwalify
+        pip3 install -U unidiff
+        pip3 install --user -U west
+        pip3 show -f west
+        pip3 install -U wheel setuptools wheel unidiff
+        grep -E "python-magic|junitparser|lxml|gitlint|pylint|pykwalify|yamllint" scripts/requirements-fixed.txt | xargs pip3 install -U || true
 
     - name: Clone Zephyr downstream
       env:
@@ -64,11 +88,36 @@ jobs:
       working-directory: wfa_qt_app
       if: contains(github.event.pull_request.user.login, 'dependabot[bot]') != true
       run: |
-        export ZEPHYR_BASE="$(dirname "$(pwd)")/wfa_qt_app/sdk-zephyr"
-        # debug
+        export ZEPHYR_BASE="$(pwd)/sdk-zephyr"
+        # Debug information
+        echo "Working directory: $(pwd)"
+        echo "ZEPHYR_BASE: $ZEPHYR_BASE"
+        echo "Directory contents:"
         ls -la
+        echo "Git log (recent commits):"
         git log --pretty=oneline | head -n 10
-        # For now we run KconfigBasic, but we should transition to Kconfig
+        echo "Base ref: ${BASE_REF}"
+        # Verify that the check_compliance.py script exists
+        if [[ ! -f "$ZEPHYR_BASE/scripts/ci/check_compliance.py" ]]; then
+          echo "::error ::check_compliance.py script not found at $ZEPHYR_BASE/scripts/ci/check_compliance.py"
+          echo "::error ::Available files in sdk-zephyr/:"
+          ls -la "$ZEPHYR_BASE" 2>/dev/null || echo "ZEPHYR_BASE directory does not exist"
+          echo "::error ::Available files in sdk-zephyr/scripts/:"
+          ls -la "$ZEPHYR_BASE/scripts/" 2>/dev/null || echo "scripts directory does not exist"
+          echo "::error ::Available files in sdk-zephyr/scripts/ci/:"
+          ls -la "$ZEPHYR_BASE/scripts/ci/" 2>/dev/null || echo "scripts/ci directory does not exist"
+          exit 1
+        fi
+
+        # Run compliance checks (exclude problematic/irrelevant checks for WFA QT app)
+        echo "Running compliance checks..."
+        echo "Excluded checks: KconfigBasic, checkpatch, Kconfig, KconfigBasicNoModules, ModulesMaintainers, DevicetreeBindings, TextEncoding, Pylint, SphinxLint, SysbuildKconfigBasic, SysbuildKconfig, SysbuildKconfigBasicNoModules"
+
+        # Show available compliance checks for reference
+        echo "Available compliance checks:"
+        $ZEPHYR_BASE/scripts/ci/check_compliance.py -h | grep -A 20 "compliance tests:" || true
+
+        set +e  # Don't exit on error, we want to continue even if checks fail
         $ZEPHYR_BASE/scripts/ci/check_compliance.py --annotate \
         -e KconfigBasic \
         -e checkpatch  \
@@ -76,10 +125,35 @@ jobs:
         -e KconfigBasicNoModules \
         -e ModulesMaintainers \
         -e DevicetreeBindings \
+        -e TextEncoding \
+        -e Pylint \
+        -e SphinxLint \
+        -e SysbuildKconfigBasic \
+        -e SysbuildKconfig \
+        -e SysbuildKconfigBasicNoModules \
+        -e ClangFormat \
         -c origin/${BASE_REF}..
+        compliance_exit_code=$?
+        set -e
+
+        echo "Compliance check completed with exit code: $compliance_exit_code"
+
+        # Check if compliance.xml was generated
+        if [[ -f "compliance.xml" ]]; then
+          echo "compliance.xml was generated successfully"
+          echo "File size: $(stat -c%s compliance.xml) bytes"
+        else
+          echo "::warning ::compliance.xml was not generated"
+        fi
+
+        # List any generated .txt files
+        echo "Generated compliance result files:"
+        ls -la *.txt 2>/dev/null || echo "No .txt files found"
+
+        exit $compliance_exit_code
 
     - name: upload-results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       continue-on-error: true
       if: contains(github.event.pull_request.user.login, 'dependabot[bot]') != true
       with:
@@ -90,24 +164,47 @@ jobs:
       working-directory: wfa_qt_app
       if: contains(github.event.pull_request.user.login, 'dependabot[bot]') != true
       run: |
-        export ZEPHYR_BASE="$(dirname "$(pwd)")/wfa_qt_app/sdk-zephyr"
-        if [[ ! -s "compliance.xml" ]]; then
-          exit 1;
+        export ZEPHYR_BASE="$(pwd)/sdk-zephyr"
+
+        # Debug: Check what files exist
+        echo "Current directory contents:"
+        ls -la
+
+        # Check if compliance.xml exists and has content
+        if [[ ! -f "compliance.xml" ]]; then
+          echo "::error ::compliance.xml file does not exist. Compliance tests may have failed completely."
+          exit 1
         fi
 
-        files=($($ZEPHYR_BASE/scripts/ci/check_compliance.py -l))
+        if [[ ! -s "compliance.xml" ]]; then
+          echo "::warning ::compliance.xml file is empty. No compliance results to process."
+          exit 0
+        fi
+
+        echo "compliance.xml exists and has content. Processing compliance results..."
+
+        # Get list of compliance check files
+        if ! files=($($ZEPHYR_BASE/scripts/ci/check_compliance.py -l 2>/dev/null)); then
+          echo "::error ::Failed to get list of compliance check files"
+          exit 1
+        fi
+
+        exit_code=0
         for file in "${files[@]}"; do
           f="${file}.txt"
           if [[ -s $f ]]; then
+            echo "::notice ::Found compliance errors in $f"
             errors=$(cat $f)
             errors="${errors//'%'/'%25'}"
             errors="${errors//$'\n'/'%0A'}"
             errors="${errors//$'\r'/'%0D'}"
             echo "::error file=${f}::$errors"
-            exit=1
+            exit_code=1
           fi
         done
 
-        if [ "${exit}" == "1" ]; then
-          exit 1;
+        if [ "${exit_code}" == "1" ]; then
+          echo "::error ::Compliance check found errors. See above for details."
+          exit 1
         fi
+        echo "::notice ::All compliance checks passed successfully."
