@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#ifdef CONFIG_ZEPHYR
+#ifdef __ZEPHYR__
 #include <zephyr/net/socket.h>
 #include <zephyr/net/net_ip.h>
 #include <zephyr/shell/shell.h>
@@ -105,7 +105,7 @@ static void control_receive_message(int sock, void *eloop_ctx, void *sock_ctx) {
         indigo_logger(LOG_LEVEL_INFO, "API %s: Return execution result", api->name);
         len = assemble_packet(buffer, BUFFER_LEN, &resp);
         sendto(sock, (const char *)buffer, len, MSG_CONFIRM, (const struct sockaddr *) &from, fromlen);
-#ifdef CONFIG_ZEPHYR
+#ifdef __ZEPHYR__
         if(!strcmp(api->name, "DEVICE_RESET")) {
 		k_msleep(CONFIG_WFA_QT_REBOOT_TIMEOUT_MS);
 		shell_execute_cmd(NULL, "kernel reboot cold");

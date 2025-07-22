@@ -34,9 +34,9 @@
 #endif
 #define UPLOAD_TC_APP_LOG 1
 
-#ifdef CONFIG_ZEPHYR
+#ifdef __ZEPHYR__
 #define MSG_CONFIRM 0x800
-#endif /* CONFIG_ZEPHYR */
+#endif /* __ZEPHYR__ */
 
 #ifndef INADDR_NONE
 #define INADDR_NONE 0xffffffff
