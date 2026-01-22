@@ -22,7 +22,6 @@
 #include <signal.h>
 #ifdef __ZEPHYR__
 #include <zephyr/posix/sys/select.h>
-#include <zephyr/posix/signal.h>
 #define signal(a, b) (void)(b)
 #define alarm(a) (void)(a)
 #else

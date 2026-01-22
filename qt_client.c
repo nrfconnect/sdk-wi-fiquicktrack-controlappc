@@ -18,7 +18,7 @@
 #include <string.h>
 #include <stdlib.h>
 #ifdef __ZEPHYR__
-#include <zephyr/net/socket.h>
+#include <sys/socket.h>
 #include <zephyr/net/net_ip.h>
 #include <zephyr/shell/shell.h>
 #else
@@ -145,14 +145,14 @@ int control_socket_init(int port) {
             sprintf(cmd, "netstat -lunatp | grep %d", port);
             system(cmd);
         }
-        close(s);
+        zsock_close(s);
         return -1;
     }
 
     /* Register to eloop and ready for the socket event */
     if (qt_eloop_register_read_sock(s, control_receive_message, NULL, NULL)) {
         indigo_logger(LOG_LEVEL_ERROR, "Failed to initiate ControlAppC");
-        close(s);
+        zsock_close(s);
         return -1;
     }
     return s;
