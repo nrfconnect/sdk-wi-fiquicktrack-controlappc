@@ -48,10 +48,17 @@ int parse_packet(struct packet_wrapper *req, char *packet, size_t packet_len) {
     }
 
     /* Parse the TLVs */
-    while (packet_len - parser > 0) {
+    while ((size_t)parser < packet_len) {
+        if (req->tlv_num >= TLV_NUM) {
+            indigo_logger(LOG_LEVEL_ERROR, "%d: Exceeded maximum number of TLVs (%d)", __LINE__, TLV_NUM);
+            return -1;
+        }
+
         req->tlv[req->tlv_num] = (struct tlv_hdr *)malloc(sizeof(struct tlv_hdr));
         if (!req->tlv[req->tlv_num]) {
-            indigo_logger(LOG_LEVEL_ERROR, "%d: Failed to allocate memory for TLV; %d" , __LINE__, req->tlv_num);
+            indigo_logger(LOG_LEVEL_ERROR,
+                          "%d: Failed to allocate memory for TLV; %zu",
+                          __LINE__, req->tlv_num);
             return -1;
         }
         memset(req->tlv[req->tlv_num], 0, sizeof(struct tlv_hdr));
