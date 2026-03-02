@@ -91,19 +91,16 @@ void debug_print_timestamp(void) {
 #endif
 }
 
+#define MAX_FORMAT_LEN 256
+
 void indigo_logger(int level, const char *fmt, ...) {
-    char *format, *log_type;
-    int maxlen;
+    char message[MAX_FORMAT_LEN];
+    const char *log_type;
+    int ret;
 #ifdef _SYSLOG_
     int priority;
 #endif
     va_list ap;
-
-    maxlen = strlen(fmt) + 100;
-    format = malloc(maxlen);
-    if (!format) {
-        return;
-    }
 
     switch (level) {
     case LOG_LEVEL_DEBUG_VERBOSE:
@@ -126,26 +123,39 @@ void indigo_logger(int level, const char *fmt, ...) {
         break;
     }
 
-    snprintf(format, maxlen, "controlappc.%8s  %s", log_type, fmt);
+    va_start(ap, fmt);
+    ret = vsnprintf(message, sizeof(message), fmt, ap);
+    va_end(ap);
+    if (ret < 0) {
+        fprintf(stderr,
+                "vsnprintf failed in indigo_logger (ret=%d)\n", ret);
+        return;
+    }
+    if (ret >= (int)sizeof(message)) {
+        static const char truncated_marker[] = " [truncated]";
+        size_t marker_len = sizeof(truncated_marker) - 1;
+        size_t message_len = sizeof(message);
+        fprintf(stderr,
+                "vsnprintf truncated log message in indigo_logger (ret=%d, size=%zu)\n",
+                ret, sizeof(message));
+        if (message_len > marker_len) {
+            size_t marker_pos = message_len - marker_len - 1;
+            memcpy(message + marker_pos, truncated_marker, marker_len + 1);
+        }
+    }
 
     if (level >= stdout_level) {
         debug_print_timestamp();
-        va_start(ap, fmt);
-        vprintf(format, ap);
-        va_end(ap);
-        printf("\n");
+        printf("controlappc.%8s  %s\n", log_type, message);
 #if UPLOAD_TC_APP_LOG
         if (app_log) {
-            va_start(ap, fmt);
-            vfprintf(app_log, format, ap);
-            fprintf(app_log, "\n");
-            va_end(ap);
+            fprintf(app_log, "controlappc.%8s  %s\n", log_type, message);
         }
 #endif
     }
 
 #ifdef _SYSLOG_
-    if (level >= stdout_level) {
+    if (level >= syslog_level) {
         switch (level) {
         case LOG_LEVEL_DEBUG_VERBOSE:
         case LOG_LEVEL_DEBUG:
@@ -164,9 +174,7 @@ void indigo_logger(int level, const char *fmt, ...) {
                 priority = LOG_INFO;
                 break;
         }
-        va_start(ap, fmt);
-        vsyslog(priority, format, ap);
-        va_end(ap);
+        syslog(priority, "controlappc.%8s  %s", log_type, message);
     }
 #endif
 }
