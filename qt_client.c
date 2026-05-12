@@ -145,14 +145,22 @@ int control_socket_init(int port) {
             sprintf(cmd, "netstat -lunatp | grep %d", port);
             system(cmd);
         }
+#ifdef __ZEPHYR__
         zsock_close(s);
+#else
+        close(s);
+#endif
         return -1;
     }
 
     /* Register to eloop and ready for the socket event */
     if (qt_eloop_register_read_sock(s, control_receive_message, NULL, NULL)) {
         indigo_logger(LOG_LEVEL_ERROR, "Failed to initiate ControlAppC");
+#ifdef __ZEPHYR__
         zsock_close(s);
+#else
+        close(s);
+#endif
         return -1;
     }
     return s;
