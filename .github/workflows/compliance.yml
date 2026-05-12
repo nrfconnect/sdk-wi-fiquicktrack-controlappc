@@ -41,17 +41,7 @@ jobs:
       working-directory: wfa_qt_app
       run: |
         export PATH="$HOME/.local/bin:$PATH"
-        # TODO: add yamllint to scripts/requirements-fixed.txt
-        pip3 install -U yamllint
-        pip3 install lxml
-        # Install specific python-magic version to avoid ctypes issues
-        pip3 install python-magic==0.4.27
-        pip3 install -U junitparser==2.8.0 gitlint pylint pykwalify
-        pip3 install -U unidiff
-        pip3 install --user -U west
-        pip3 show -f west
-        pip3 install -U wheel setuptools wheel unidiff
-        grep -E "python-magic|junitparser|lxml|gitlint|pylint|pykwalify|yamllint" scripts/requirements-fixed.txt | xargs pip3 install -U || true
+        python3 -m pip install -r scripts/requirements-compliance-ci.txt
 
     - name: Clone Zephyr downstream
       env:
@@ -68,7 +58,7 @@ jobs:
         git rebase origin/${BASE_REF}
         # debug
         git log  --pretty=oneline | head -n 10
-        # Clone downstream Zephyr (no west needed as we only need the scripts)
+        # Clone downstream Zephyr (scripts only; west workspace init is not used).
         git clone https://github.com/nrfconnect/sdk-zephyr
 
     - name: Run CODEOWNERS test
