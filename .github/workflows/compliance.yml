@@ -99,29 +99,29 @@ jobs:
           exit 1
         fi
 
-        # Run compliance checks (exclude problematic/irrelevant checks for WFA QT app)
-        echo "Running compliance checks..."
-        echo "Excluded checks: KconfigBasic, checkpatch, Kconfig, KconfigBasicNoModules, ModulesMaintainers, DevicetreeBindings, TextEncoding, Pylint, SphinxLint, SysbuildKconfigBasic, SysbuildKconfig, SysbuildKconfigBasicNoModules"
-
-        # Show available compliance checks for reference
-        echo "Available compliance checks:"
-        $ZEPHYR_BASE/scripts/ci/check_compliance.py -h | grep -A 20 "compliance tests:" || true
+        # Run a small whitelist of Zephyr compliance checks relevant to this repo
+        # (no Kconfig, checkpatch, Ruff, LicenseAndCopyrightCheck, or board/DT/device
+        # checks). reuse and west are installed anyway because check_compliance.py
+        # imports them at startup.
+        echo "Running compliance checks (whitelisted modules only)..."
+        echo "Included checks:"
+        echo "  BinaryFiles CMakeStyle GitDiffCheck Gitlint Identity ImageSize"
+        echo "  KeepSorted MaintainersFormat Nits PythonCompat YAMLLint ZephyrModuleFile"
 
         set +e  # Don't exit on error, we want to continue even if checks fail
         $ZEPHYR_BASE/scripts/ci/check_compliance.py --annotate \
-        -e KconfigBasic \
-        -e checkpatch  \
-        -e Kconfig \
-        -e KconfigBasicNoModules \
-        -e ModulesMaintainers \
-        -e DevicetreeBindings \
-        -e TextEncoding \
-        -e Pylint \
-        -e SphinxLint \
-        -e SysbuildKconfigBasic \
-        -e SysbuildKconfig \
-        -e SysbuildKconfigBasicNoModules \
-        -e ClangFormat \
+        -m BinaryFiles \
+        -m CMakeStyle \
+        -m GitDiffCheck \
+        -m Gitlint \
+        -m Identity \
+        -m ImageSize \
+        -m KeepSorted \
+        -m MaintainersFormat \
+        -m Nits \
+        -m PythonCompat \
+        -m YAMLLint \
+        -m ZephyrModuleFile \
         -c origin/${BASE_REF}..
         compliance_exit_code=$?
         set -e
